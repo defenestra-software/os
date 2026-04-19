@@ -108,7 +108,7 @@ build $target=image_name $tag=default_tag:
         "${BUILD_ARGS[@]}" \
         --pull=newer \
         --target "${target}" \
-        --tag "${target}:${tag}" \
+        --tag "localhost/${target}:${tag}" \
         .
 
 # Build all variants

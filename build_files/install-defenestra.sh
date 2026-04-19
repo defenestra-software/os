@@ -15,11 +15,15 @@ echo ":: Installing DefenestraOS packages..."
 # -----------------------------------------------------------------------------
 
 dnf5 -y copr enable defenestra/defenestra
-dnf5 -y install --allowerasing defenestra-branding
+dnf5 -y install --allowerasing --refresh defenestra-branding
 # TODO: Build these packages
 # dnf5 -y install defenestra-welcome
 # dnf5 -y install defenestra-store
 dnf5 -y copr disable defenestra/defenestra
+
+# gnome-initial-setup — bazzite doesn't include it (uses their own portal).
+# We stripped bazzite-portal, so we need this for first-boot user creation.
+dnf5 -y install gnome-initial-setup
 
 # -----------------------------------------------------------------------------
 # Flatpak remote — defenestra repo

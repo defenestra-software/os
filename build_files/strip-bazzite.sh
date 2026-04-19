@@ -55,6 +55,8 @@ rm -rf /usr/share/yafti/
 
 rm -f /usr/share/applications/bazzite-documentation.desktop
 rm -f /usr/share/applications/discourse.desktop
+rm -f /usr/share/applications/system-update.desktop
+rm -f /usr/share/applications/bbrew.desktop
 
 # -----------------------------------------------------------------------------
 # Bazaar app store assets (RPM handles binary, these are leftover configs)
