@@ -1,0 +1,2 @@
+[org.gnome.desktop.app-folders]
+folder-children=['Games', 'GamingUtilities', 'Utilities', 'Containers', 'Waydroid', 'Wine']

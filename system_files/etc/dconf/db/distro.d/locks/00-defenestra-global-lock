@@ -1,0 +1,4 @@
+# Lock GNOME Software updates (we use our own update mechanism)
+/org/gnome/software/allow-updates
+/org/gnome/software/download-updates
+/org/gnome/software/download-updates-notify

@@ -1,0 +1,10 @@
+[Unit]
+Description=Update dconf database
+Before=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/dconf update
+
+[Install]
+WantedBy=multi-user.target

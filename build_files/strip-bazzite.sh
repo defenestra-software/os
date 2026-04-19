@@ -15,15 +15,9 @@ echo ":: Stripping bazzite branding and onboarding..."
 # RPMs — clean package removal
 # -----------------------------------------------------------------------------
 
-# Remove bazzite app store and welcome wizard
-# NOTE: Verify exact package names against live image. If a package doesn't
-# exist, dnf5 remove will error — hence the || true guards.
-dnf5 remove -y --noautoremove bazaar || true
-dnf5 remove -y --noautoremove yafti || true
-
-# TODO: Verify these package names against live bazzite image
-# dnf5 remove -y --noautoremove gnome-shell-extension-bazzite-menu || true
-# dnf5 remove -y --noautoremove ublue-os-branding-bazzite || true
+# Verified against live bazzite 43.20260403.0 (Silverblue)
+dnf5 remove -y --noautoremove bazaar           # Bazzite app store
+dnf5 remove -y --noautoremove bazzite-portal   # Bazzite welcome/portal app
 
 # -----------------------------------------------------------------------------
 # Branding assets
