@@ -1,24 +1,32 @@
 #!/bin/bash
-
 set -ouex pipefail
 
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
-dnf5 install -y tmux 
-
-# Use a COPR Example:
+# =============================================================================
+# DefenestraOS Build Script
 #
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+# Single entry point matching sibling image patterns (bazzite, bluefin, aurora).
+# Called from Containerfile with build context mounted at /ctx.
+# =============================================================================
 
-#### Example for enabling a System Unit File
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-systemctl enable podman.socket
+echo ":: DefenestraOS build starting..."
+echo "   IMAGE_NAME=${IMAGE_NAME:-unset}"
+echo "   IMAGE_VARIANT=${IMAGE_VARIANT:-unset}"
+
+# Step 1: Strip bazzite branding, onboarding, app store
+"${SCRIPT_DIR}/strip-bazzite.sh"
+
+# Step 2: Rename bazzite-* scripts/services → defenestra-*
+"${SCRIPT_DIR}/rename-scripts.sh"
+
+# Step 3: Install defenestra packages, overlay system_files, enable services
+"${SCRIPT_DIR}/install-defenestra.sh"
+
+# Step 4: Stamp OS identity (os-release, image-info.json)
+"${SCRIPT_DIR}/image-info"
+
+# Step 5: Compile schemas, update caches, clean up
+"${SCRIPT_DIR}/finalize.sh"
+
+echo ":: DefenestraOS build complete."

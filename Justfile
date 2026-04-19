@@ -1,6 +1,10 @@
-export image_name := env("IMAGE_NAME", "image-template") # output image name, usually same as repo name, change as needed
+export image_name := env("IMAGE_NAME", "defenestraos")
 export default_tag := env("DEFAULT_TAG", "latest")
+export base_tag := env("BASE_TAG", "stable")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
+
+# All available build targets
+targets := "defenestraos defenestraos-nvidia defenestraos-nvidia-open defenestraos-handheld defenestraos-handheld-nvidia defenestraos-handheld-nvidia-open"
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -85,20 +89,47 @@ sudoif command *args:
 # This will build an image 'aurora:lts' with DX and GDX enabled.
 #
 
-# Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag:
+# Build a single variant (use --target to select)
+# Examples:
+#   just build                              # builds defenestraos (AMD/Intel desktop)
+#   just build defenestraos-nvidia           # builds NVIDIA closed desktop
+#   just build defenestraos-handheld         # builds handheld AMD/Intel
+build $target=image_name $tag=default_tag:
     #!/usr/bin/env bash
+    set -euo pipefail
 
-    BUILD_ARGS=()
+    BUILD_ARGS=("--build-arg" "BASE_TAG={{ base_tag }}")
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
 
+    echo "Building target: ${target}"
     podman build \
         "${BUILD_ARGS[@]}" \
         --pull=newer \
-        --tag "${target_image}:${tag}" \
+        --target "${target}" \
+        --tag "${target}:${tag}" \
         .
+
+# Build all variants
+[group('Build')]
+build-all $tag=default_tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for target in {{ targets }}; do
+        echo "=== Building ${target} ==="
+        just build "${target}" "{{ tag }}"
+    done
+
+# Build only desktop variants (no handheld)
+[group('Build')]
+build-desktop $tag=default_tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for target in defenestraos defenestraos-nvidia defenestraos-nvidia-open; do
+        echo "=== Building ${target} ==="
+        just build "${target}" "{{ tag }}"
+    done
 
 # Command: _rootful_load_image
 # Description: This script checks if the current user is root or running under sudo. If not, it attempts to resolve the image tag using podman inspect.
