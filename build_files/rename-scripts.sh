@@ -37,6 +37,7 @@ rename_file /usr/libexec/bazzite-bling-fastfetch       /usr/libexec/defenestra-b
 rename_file /usr/libexec/bazzite-powersave             /usr/libexec/defenestra-powersave
 rename_file /usr/libexec/bazzite-snapper-config        /usr/libexec/defenestra-snapper-config
 rename_file /usr/libexec/bazzite-fetch-image           /usr/libexec/defenestra-fetch-image
+rename_file /usr/libexec/bazzite_detect_nvidia_support_status /usr/libexec/defenestra_detect_nvidia_support_status
 # Handheld
 rename_file /usr/libexec/bazzite-tdpfix                /usr/libexec/defenestra-tdpfix
 rename_file /usr/libexec/bazzite-autologin             /usr/libexec/defenestra-autologin
@@ -208,6 +209,7 @@ for dir in "${sed_dirs[@]}"; do
             -e 's/org\.bazzite\./org.defenestra./g' \
             -e 's/bazzite-neofetch/defenestra-fastfetch/g' \
             -e 's/bazzite-cli\.Brewfile/defenestra-cli.Brewfile/g' \
+            -e 's/bazzite_detect_nvidia_support_status/defenestra_detect_nvidia_support_status/g' \
             {} +
 done
 

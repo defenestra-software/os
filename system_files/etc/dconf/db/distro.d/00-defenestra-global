@@ -1,0 +1,24 @@
+# Relocatable schemas (keybindings, extension config)
+# These can't be set via gschema overrides.
+
+[org/gnome/shell/extensions/appindicator]
+legacy-tray-enabled=true
+
+[org/gnome/shell/extensions/add-to-steam]
+use-nautilus=false
+
+# Keybindings
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+binding='<Control><Alt>t'
+command='ptyxis --new-window'
+name='Terminal'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
+binding='<Control><Alt>KP_Delete'
+command='flatpak run net.nokyan.Resources'
+name='Resources'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2]
+binding='<Control><Shift>Escape'
+command='flatpak run net.nokyan.Resources'
+name='Resources'

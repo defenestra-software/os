@@ -1,0 +1,14 @@
+# DefenestraOS default Flatpaks — installed on first boot
+# One app ID per line. Lines starting with # are comments.
+
+# Browser
+org.mozilla.firefox
+
+# System monitor (replaces gnome-system-monitor)
+net.nokyan.Resources
+
+# Extension management
+com.mattjakeman.ExtensionManager
+
+# Flatpak permissions manager
+com.github.tchx84.Flatseal

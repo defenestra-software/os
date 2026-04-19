@@ -1,0 +1,119 @@
+#!/usr/bin/bash
+
+# Script version — bump VER to force re-run on update
+VER=2
+SCRIPT_HASH=$(tr -d '[:space:]' <"$0" | sha256sum | cut -d ' ' -f 1)
+VER="$VER-$SCRIPT_HASH"
+VER_FILE="/etc/defenestra/flatpak_manager_version"
+VER_RAN=$(cat "$VER_FILE" 2>/dev/null)
+IMAGE_NAME_FILE="/etc/defenestra/flatpak_manager_image_name"
+IMAGE_NAME=$(cat /etc/os-release | grep "^VARIANT_ID=" | cut -d= -f2)
+KNOWN_IMAGE_NAME=$(cat "$IMAGE_NAME_FILE" 2>/dev/null)
+
+# Run script if updated or image changed
+if [[ -f $VER_FILE && $VER = "$VER_RAN" ]]; then
+    if [[ -f $IMAGE_NAME_FILE && $IMAGE_NAME = "$KNOWN_IMAGE_NAME" ]]; then
+        echo "Flatpak manager v$VER has already ran. Exiting..."
+        exit 0
+    fi
+fi
+
+# Ensure Flathub is enabled
+flatpak remote-add --if-not-exists --system flathub /etc/flatpak/remotes.d/flathub.flatpakrepo || :
+flatpak remote-modify --system --enable flathub || :
+
+# Ensure Defenestra repo is enabled
+flatpak remote-add --if-not-exists --system --from defenestra \
+    https://my.defenestra.io/downloads/defenestra.flatpakrepo || :
+flatpak remote-modify --system --enable defenestra || :
+
+# Disable fedora flatpak remote
+flatpak remote-modify --disable fedora || :
+flatpak remote-modify --disable fedora-testing || :
+
+# Apply blocklist if present
+if [[ -f /usr/share/defenestra/flatpak-blocklist ]]; then
+    flatpak remote-modify --system --filter=/usr/share/defenestra/flatpak-blocklist flathub
+fi
+
+# Flatpak theming support
+flatpak override \
+    --filesystem=xdg-config/gtk-4.0:ro \
+    --filesystem=xdg-config/gtk-3.0:ro
+
+# XInput for Firefox
+flatpak override \
+    --system \
+    --env=MOZ_USE_XINPUT2=1 \
+    org.mozilla.firefox
+
+# Fix printing on LibreOffice
+flatpak override \
+    --system \
+    --socket=cups \
+    --socket=session-bus \
+    org.libreoffice.LibreOffice
+
+# Allow MangoHUD/vkBasalt config for Flatpaks
+flatpak override \
+    --filesystem=xdg-config/MangoHud:create \
+    --filesystem=xdg-config/vkBasalt:create
+
+# Fix permissions for XIV Launcher
+flatpak override \
+    --device=dri \
+    dev.goats.xivlauncher
+
+# Fix permissions for Protontricks
+flatpak override \
+    --filesystem=~/.local/share/Steam \
+    --filesystem=/var/mnt \
+    --filesystem=/run/media \
+    com.github.Matoking.protontricks
+
+# Allow passkey bluetooth for Chromium browsers
+for app in \
+    com.brave.Browser \
+    com.google.Chrome \
+    io.github.ungoogled_software.ungoogled_chromium; \
+do
+    flatpak override --system-talk-name=org.bluez "$app"
+done
+unset -v app
+
+# Nvidia HW accelerated video (if nvidia variant, single GPU)
+if [[ $IMAGE_NAME =~ "nvidia" ]] && [ "$(grep -o "\-display" <<< "$(lshw -C display)" | wc -l)" -le 1 ] && grep -q "vendor: NVIDIA Corporation" <<< "$(lshw -C display)"; then
+    flatpak override \
+        --system \
+        --filesystem=host-os \
+        --env=LIBVA_DRIVER_NAME=nvidia \
+        --env=LIBVA_DRIVERS_PATH=/run/host/usr/lib64/dri \
+        --env=LIBVA_MESSAGING_LEVEL=1 \
+        --env=MOZ_DISABLE_RDD_SANDBOX=1 \
+        --env=NVD_BACKEND=direct \
+        org.mozilla.firefox
+else
+    # Undo if user rebased from nvidia to non-nvidia
+    flatpak override \
+        --system \
+        --nofilesystem=host-os \
+        --unset-env=LIBVA_DRIVER_NAME \
+        --unset-env=LIBVA_DRIVERS_PATH \
+        --unset-env=LIBVA_MESSAGING_LEVEL \
+        --unset-env=MOZ_DISABLE_RDD_SANDBOX \
+        --unset-env=NVD_BACKEND \
+        org.mozilla.firefox
+fi
+
+# Install default Flatpaks if not already present
+FLATPAK_LIST="/usr/share/defenestra/default-flatpaks"
+if [[ -f "$FLATPAK_LIST" ]]; then
+    while IFS= read -r app; do
+        [[ -z "$app" || "$app" == \#* ]] && continue
+        flatpak install --system --noninteractive --assumeyes flathub "$app" || :
+    done < "$FLATPAK_LIST"
+fi
+
+mkdir -p /etc/defenestra
+echo "$VER" > "$VER_FILE"
+echo "$IMAGE_NAME" > "$IMAGE_NAME_FILE"

@@ -14,12 +14,12 @@ echo ":: Installing DefenestraOS packages..."
 # DefenestraOS COPR packages (when available)
 # -----------------------------------------------------------------------------
 
-# TODO: Enable when COPR repo is set up
-# dnf5 -y copr enable defenestra/defenestra
-# dnf5 -y install defenestra-branding
+dnf5 -y copr enable defenestra/defenestra
+dnf5 -y install --allowerasing defenestra-branding
+# TODO: Build these packages
 # dnf5 -y install defenestra-welcome
 # dnf5 -y install defenestra-store
-# dnf5 -y copr disable defenestra/defenestra
+dnf5 -y copr disable defenestra/defenestra
 
 # -----------------------------------------------------------------------------
 # Flatpak remote — defenestra repo
@@ -39,11 +39,52 @@ flatpak remote-add --if-not-exists --from defenestra \
 # -----------------------------------------------------------------------------
 
 if [ -d /ctx/system_files ] && [ "$(ls -A /ctx/system_files 2>/dev/null)" ]; then
-    rsync -av /ctx/system_files/ /
+    # Overlay everything EXCEPT extensions (handled below) and nvidia (conditional)
+    rsync -av --exclude='usr/share/gnome-shell/extensions' --exclude='nvidia' /ctx/system_files/ /
     echo ":: System files overlaid."
+
+    # Nvidia-specific overlays (only for nvidia variants)
+    if [[ "${IMAGE_VARIANT:-}" == *nvidia* ]] && [ -d /ctx/system_files/nvidia ]; then
+        rsync -av /ctx/system_files/nvidia/ /
+        echo ":: Nvidia system files overlaid."
+    fi
 else
     echo ":: No system_files to overlay (skeleton build)."
 fi
+
+# -----------------------------------------------------------------------------
+# Bundled GNOME extensions (from submodules)
+# -----------------------------------------------------------------------------
+
+BUNDLED_EXT_SRC="/ctx/system_files/usr/share/gnome-shell/extensions"
+BUNDLED_EXT_DST="/usr/share/gnome-shell/extensions"
+
+dnf5 -y install glib2-devel
+
+# Clipboard Indicator — straightforward copy
+if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
+    cp -r "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" "${BUNDLED_EXT_DST}/"
+    if [ -d "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas" ]; then
+        glib-compile-schemas "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas"
+    fi
+fi
+
+# ArcMenu — flatten src/ to root, compile resources
+if [ -d "${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com" ]; then
+    ARCMENU_SRC="${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com"
+    ARCMENU_DST="${BUNDLED_EXT_DST}/arcmenu@arcmenu.com"
+    mkdir -p "${ARCMENU_DST}/data"
+    cp -r "${ARCMENU_SRC}/src"/* "${ARCMENU_DST}/"
+    cp "${ARCMENU_SRC}/metadata.json" "${ARCMENU_DST}/"
+    cp "${ARCMENU_SRC}/LICENSE" "${ARCMENU_DST}/"
+    cp -r "${ARCMENU_SRC}/schemas" "${ARCMENU_DST}/"
+    cp -r "${ARCMENU_SRC}/data/icons" "${ARCMENU_DST}/data/"
+    cp "${ARCMENU_SRC}/data/resources.gresource.xml" "${ARCMENU_DST}/data/"
+    glib-compile-resources --sourcedir="${ARCMENU_DST}/data" "${ARCMENU_DST}/data/resources.gresource.xml"
+    glib-compile-schemas "${ARCMENU_DST}/schemas"
+fi
+
+dnf5 -y remove glib2-devel
 
 # -----------------------------------------------------------------------------
 # Re-enable renamed services
