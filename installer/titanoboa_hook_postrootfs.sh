@@ -6,16 +6,27 @@ set -exo pipefail
 
 source /etc/os-release
 
-# Remove all versionlocks to avoid dependency issues
-dnf -qy versionlock clear
+# Clear versionlocks so Anaconda can install (needs stock NetworkManager)
+# The live session doesn't need bazzite-patched packages — the installed
+# system gets them from the embedded OS image, not the live environment.
+dnf -y versionlock clear
 
-# Install Anaconda and dependencies (may pull fedora-logos, overwriting our branding)
-dnf install -qy --enable-repo=fedora-cisco-openh264 --allowerasing firefox anaconda-live libblockdev-{btrfs,lvm,dm}
+# Install Anaconda and dependencies
+dnf install -y --enable-repo=fedora-cisco-openh264 --allowerasing \
+    firefox anaconda-live libblockdev-{btrfs,lvm,dm}
 
-# Reinstall our branding RPM — Anaconda pulls in fedora-logos which overwrites ours
-dnf -qy copr enable defenestra/defenestra
-dnf -qy install --allowerasing --refresh defenestra-branding
-dnf -qy copr disable defenestra/defenestra
+# Reinstall our branding RPM — Anaconda pulls in fedora-logos which removes ours
+dnf -y copr enable defenestra/defenestra
+dnf -y install --allowerasing --refresh defenestra-branding
+dnf -y copr disable defenestra/defenestra
+
+# Reinstall extensions that --allowerasing may have removed
+dnf -y install \
+    gnome-shell-extension-dash-to-panel \
+    gnome-shell-extension-dash-to-dock \
+    gnome-shell-extension-places-menu \
+    gnome-shell-extension-light-style \
+    || true
 
 mkdir -p /var/lib/rpm-state
 
