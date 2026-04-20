@@ -121,6 +121,46 @@ build-all $tag=default_tag:
         just build "${target}" "{{ tag }}"
     done
 
+# Build live ISO payload container and generate ISO via Titanoboa
+# Requires: the OS image must be built first (just build)
+[group('Build Live ISO')]
+build-live-iso $target=image_name $tag=default_tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    PAYLOAD_TAG="localhost/${target}-live-payload:${tag}"
+    BASE_IMAGE="localhost/${target}:${tag}"
+    INSTALL_IMAGE="localhost/${target}:${tag}"
+
+    echo "=== Building live ISO payload for ${target} ==="
+
+    # Step 1: Build the payload container
+    # Mount host container storage so the build can load the OS image
+    sudo podman build \
+        --cap-add sys_admin \
+        --security-opt label=disable \
+        -v /var/lib/containers/storage:/usr/lib/containers/storage:ro \
+        --build-arg BASE_IMAGE="$BASE_IMAGE" \
+        --build-arg INSTALL_IMAGE_PAYLOAD="$INSTALL_IMAGE" \
+        --build-arg FLATPAK_DIR_SHORTNAME="gnome_flatpaks" \
+        -t "$PAYLOAD_TAG" \
+        installer/
+
+    # Step 2: Clone Titanoboa if not present
+    if [[ ! -d .titanoboa ]]; then
+        echo "=== Cloning Titanoboa ==="
+        git clone -b revamp-pr https://github.com/Zeglius/titanoboa.git .titanoboa
+    fi
+
+    # Step 3: Generate ISO via Titanoboa
+    echo "=== Generating live ISO via Titanoboa ==="
+    mkdir -p output
+    sudo TITANOBOA_CTR_IMAGE="$PAYLOAD_TAG" \
+         TITANOBOA_OUTPUT_DIR="$(pwd)/output" \
+         ./.titanoboa/main.sh
+
+    echo "=== ISO ready in output/ ==="
+
 # Build only desktop variants (no handheld)
 [group('Build')]
 build-desktop $tag=default_tag:
@@ -305,6 +345,38 @@ run-vm-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-
 # Run a virtual machine from an ISO
 [group('Run Virtal Machine')]
 run-vm-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "iso" "disk_config/iso.toml")
+
+# Run a virtual machine from the Titanoboa live ISO
+[group('Run Virtal Machine')]
+run-vm-live-iso:
+    #!/usr/bin/bash
+    set -eoux pipefail
+
+    iso_file=$(find output -maxdepth 1 -name "*.iso" -print -quit 2>/dev/null)
+    if [[ -z "$iso_file" ]]; then
+        echo "No live ISO found in output/. Run 'just build-live-iso' first."
+        exit 1
+    fi
+
+    port=8006
+    while grep -q :${port} <<< $(ss -tunalp); do
+        port=$(( port + 1 ))
+    done
+    echo "Using Port: ${port}"
+    echo "Connect to http://localhost:${port}"
+
+    (sleep 30 && xdg-open http://localhost:"$port") &
+    podman run --rm --privileged \
+        --pull=newer \
+        --publish "127.0.0.1:${port}:8006" \
+        --env "CPU_CORES=4" \
+        --env "RAM_SIZE=8G" \
+        --env "DISK_SIZE=64G" \
+        --env "TPM=Y" \
+        --env "GPU=Y" \
+        --device=/dev/kvm \
+        -v "${PWD}/${iso_file}:/boot.iso" \
+        docker.io/qemux/qemu
 
 # Run a virtual machine using systemd-vmspawn
 [group('Run Virtal Machine')]
