@@ -16,6 +16,13 @@ echo ":: Installing DefenestraOS packages..."
 
 dnf5 -y copr enable defenestra/defenestra
 dnf5 -y install --allowerasing --refresh defenestra-branding
+
+# GNOME extensions not in bazzite base
+dnf5 -y install \
+    gnome-shell-extension-dash-to-panel \
+    gnome-shell-extension-dash-to-dock \
+    gnome-shell-extension-places-menu \
+    gnome-shell-extension-light-style
 # TODO: Build these packages
 # dnf5 -y install defenestra-welcome
 # dnf5 -y install defenestra-store

@@ -1,0 +1,10 @@
+label: "DefenestraOS-Live"
+grub2:
+  timeout: 3
+  entries:
+    - name: "Launch DefenestraOS Installer"
+      linux: "/images/pxeboot/vmlinuz quiet rhgb root=live:CDLABEL=DefenestraOS-Live enforcing=0 rd.live.image"
+      initrd: "/images/pxeboot/initrd.img"
+    - name: "Launch DefenestraOS Installer (Basic Graphics Mode)"
+      linux: "/images/pxeboot/vmlinuz quiet rhgb root=live:CDLABEL=DefenestraOS-Live enforcing=0 rd.live.image nomodeset"
+      initrd: "/images/pxeboot/initrd.img"
