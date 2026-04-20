@@ -15,7 +15,12 @@ echo ":: Installing DefenestraOS packages..."
 # -----------------------------------------------------------------------------
 
 dnf5 -y copr enable defenestra/defenestra
-dnf5 -y install --allowerasing --refresh defenestra-branding
+# fedora-logos is a defenestra fork (42.0.1-200.defenestra) that replaces the
+# upstream 42.0.1-2.fc43 — ships our pixmap/favicon/plymouth overrides baked in.
+# defenestra-branding ships defenestra-specific icons that don't collide with
+# fedora-logos paths.
+dnf5 -y upgrade --refresh fedora-logos
+dnf5 -y install --refresh defenestra-branding
 
 # GNOME extensions not in bazzite base
 dnf5 -y install \

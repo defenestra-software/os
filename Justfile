@@ -124,7 +124,7 @@ build-all $tag=default_tag:
 # Build live ISO payload container and generate ISO via Titanoboa
 # Requires: the OS image must be built first (just build)
 [group('Build Live ISO')]
-build-live-iso $target=image_name $tag=default_tag:
+build-live-iso $target=image_name $tag=default_tag: (_rootful_load_image target tag)
     #!/usr/bin/env bash
     set -euo pipefail
 
