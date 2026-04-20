@@ -15,10 +15,19 @@ dnf -y versionlock clear
 dnf install -y --enable-repo=fedora-cisco-openh264 --allowerasing \
     firefox anaconda-live libblockdev-{btrfs,lvm,dm}
 
-# Reinstall our branding RPM — Anaconda pulls in fedora-logos which removes ours
-dnf -y copr enable defenestra/defenestra
-dnf -y install --allowerasing --refresh defenestra-branding
-dnf -y copr disable defenestra/defenestra
+# Branding for the live session
+# Don't replace fedora-logos — anaconda-webui depends on it directly.
+# Our branding RPM is already in the base OS image (which gets installed).
+# For the live ISO, just overlay our logos into the pixmaps fedora-logos owns.
+cp -f /usr/share/icons/hicolor/scalable/places/defenestra-logo.svg \
+    /usr/share/pixmaps/fedora-gdm-logo.png 2>/dev/null || true
+for f in fedora-logo.png fedora-logo-small.png fedora_logo_med.png \
+         fedora_whitelogo_med.png system-logo-white.png; do
+    if [ -f /usr/share/icons/hicolor/256x256/apps/defenestra-logo-icon.png ]; then
+        cp -f /usr/share/icons/hicolor/256x256/apps/defenestra-logo-icon.png \
+            "/usr/share/pixmaps/$f"
+    fi
+done
 
 # Reinstall extensions that --allowerasing may have removed
 dnf -y install \
@@ -34,10 +43,12 @@ mkdir -p /var/lib/rpm-state
 dnf install -qy --setopt=install_weak_deps=0 qrencode yad
 
 # Variables
-imageref="$(podman images --format '{{ index .Names 0 }}\n' 'defenestra*' | head -1)"
+# Find the OS image (not the live-payload)
+imageref="$(podman images --format '{{ index .Names 0 }}\n' 'defenestra*' | grep -v 'live-payload' | head -1)"
 imageref="${imageref##*://}"
 imageref="${imageref%%:*}"
 imagetag="$(podman images --format '{{ .Tag }}\n' "$imageref" | head -1)"
+echo "Image ref: $imageref:$imagetag"
 sbkey='https://github.com/ublue-os/akmods/raw/main/certs/public_key.der'
 SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
 
@@ -45,7 +56,7 @@ SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
 
 echo "DefenestraOS release $VERSION_ID" >/etc/system-release
 
-# Anaconda branding — use our pixmaps if available
+# Anaconda installer branding (sidebar, header, CSS)
 if [ -d /src/branding ]; then
     mkdir -p /usr/share/anaconda/pixmaps/silverblue
     cp -r /src/branding/* /usr/share/anaconda/pixmaps/
