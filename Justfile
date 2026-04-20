@@ -136,7 +136,9 @@ build-live-iso $target=image_name $tag=default_tag:
 
     # Step 1: Build the payload container
     # Mount host container storage so the build can load the OS image
+    # --no-cache because installer scripts change frequently during development
     sudo podman build \
+        --no-cache \
         --cap-add sys_admin \
         --security-opt label=disable \
         -v /var/lib/containers/storage:/usr/lib/containers/storage:ro \
