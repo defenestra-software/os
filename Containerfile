@@ -19,8 +19,8 @@ ARG BASE_DESKTOP="${BASE_DESKTOP:-ghcr.io/ublue-os/bazzite-gnome:${BASE_TAG}}"
 ARG BASE_DESKTOP_NVIDIA="${BASE_DESKTOP_NVIDIA:-ghcr.io/ublue-os/bazzite-gnome-nvidia:${BASE_TAG}}"
 ARG BASE_DESKTOP_NVIDIA_OPEN="${BASE_DESKTOP_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-gnome-nvidia-open:${BASE_TAG}}"
 ARG BASE_HANDHELD="${BASE_HANDHELD:-ghcr.io/ublue-os/bazzite-deck-gnome:${BASE_TAG}}"
-ARG BASE_HANDHELD_NVIDIA="${BASE_HANDHELD_NVIDIA:-ghcr.io/ublue-os/bazzite-deck-gnome-nvidia:${BASE_TAG}}"
-ARG BASE_HANDHELD_NVIDIA_OPEN="${BASE_HANDHELD_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-deck-gnome-nvidia-open:${BASE_TAG}}"
+ARG BASE_HANDHELD_NVIDIA="${BASE_HANDHELD_NVIDIA:-ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:${BASE_TAG}}"
+ARG BASE_HANDHELD_NVIDIA_OPEN="${BASE_HANDHELD_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:${BASE_TAG}}"
 
 # Build context
 FROM scratch AS ctx
