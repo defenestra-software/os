@@ -41,8 +41,10 @@ jobs:
           - defenestraos-nvidia
           - defenestraos-nvidia-open
           - defenestraos-handheld
-          - defenestraos-handheld-nvidia
-          - defenestraos-handheld-nvidia-open
+          # defenestraos-handheld-nvidia — disabled: no NVIDIA handheld hardware exists currently
+          # - defenestraos-handheld-nvidia
+          # defenestraos-handheld-nvidia-open — disabled: no NVIDIA handheld hardware + Bazzite missing stable tag
+          # - defenestraos-handheld-nvidia-open
 
     steps:
       - name: Prepare environment
