@@ -65,10 +65,16 @@ rm -f /usr/share/applications/bbrew.desktop
 rm -rf /usr/share/ublue-os/bazaar/
 
 # -----------------------------------------------------------------------------
-# MOTD (we'll provide our own or skip)
+# MOTD — remove data, script, and all login triggers
 # -----------------------------------------------------------------------------
 
 rm -rf /usr/share/ublue-os/motd/
+rm -f /usr/libexec/ublue-motd
+rm -f /etc/profile.d/user-motd.sh
+# Fish shell greeting that calls ublue-motd
+if [ -f /usr/share/fish/functions/fish_greeting.fish ]; then
+    sed -i '/ublue-motd/d' /usr/share/fish/functions/fish_greeting.fish
+fi
 
 # -----------------------------------------------------------------------------
 # Bazzite-specific dconf branding (deck logo menu)
