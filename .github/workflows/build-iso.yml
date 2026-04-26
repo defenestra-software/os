@@ -90,7 +90,20 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | sudo podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build Container Image
+      # Pull images on the host first so they're in local storage
+      # before the container build starts. The build.sh script inside
+      # the container will find them via containers/storage.
+      - name: Pull images
+        run: |
+          BASE_IMAGE="${{ steps.registry_case.outputs.lowercase }}/${{ steps.get-base-ref.outputs.ref }}:${{ steps.generate-tag.outputs.tag }}"
+          INSTALL_IMAGE_PAYLOAD="${{ steps.registry_case.outputs.lowercase }}/${{ matrix.image_name }}:${{ steps.generate-tag.outputs.tag }}"
+
+          sudo podman pull "$BASE_IMAGE"
+          if [[ "$BASE_IMAGE" != "$INSTALL_IMAGE_PAYLOAD" ]]; then
+            sudo podman pull "$INSTALL_IMAGE_PAYLOAD"
+          fi
+
+      - name: Build Live ISO payload container
         run: |
           BASE_IMAGE="${{ steps.registry_case.outputs.lowercase }}/${{ steps.get-base-ref.outputs.ref }}:${{ steps.generate-tag.outputs.tag }}"
           INSTALL_IMAGE_PAYLOAD="${{ steps.registry_case.outputs.lowercase }}/${{ matrix.image_name }}:${{ steps.generate-tag.outputs.tag }}"
@@ -98,6 +111,7 @@ jobs:
           sudo podman build \
             --cap-add sys_admin \
             --security-opt label=disable \
+            --volume /var/lib/containers/storage:/usr/lib/containers/storage:ro \
             --build-arg BASE_IMAGE="$BASE_IMAGE" \
             --build-arg INSTALL_IMAGE_PAYLOAD="$INSTALL_IMAGE_PAYLOAD" \
             --build-arg FLATPAK_DIR_SHORTNAME="gnome_flatpaks" \
