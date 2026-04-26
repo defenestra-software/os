@@ -1,0 +1,141 @@
+---
+name: Build Live ISOs
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [main]
+    paths:
+      - 'installer/**'
+
+env:
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}-iso
+  cancel-in-progress: true
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image_name:
+          - defenestraos
+          - defenestraos-nvidia
+          - defenestraos-nvidia-open
+          - defenestraos-handheld
+    steps:
+      - name: Show disk space
+        run: sudo df -h
+
+      - name: Check if /mnt is there
+        id: check_mnt
+        run: |
+          if sudo mountpoint /mnt; then
+            echo "mnt_is_there=1" >>$GITHUB_OUTPUT
+          else
+            echo "mnt_is_there=0" >>$GITHUB_OUTPUT
+          fi
+
+      - name: Free Disk Space (Ubuntu)
+        if: ${{ steps.check_mnt.outputs.mnt_is_there == '1' }}
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+
+      - name: Mount Container Storage BTRFS Loopback
+        run: |
+          sudo truncate -s 70G /mnt/podman-storage.img
+          sudo mkfs.btrfs -f /mnt/podman-storage.img
+          sudo podman system reset --force
+          sudo systemctl stop podman.service
+          sudo mount -o compress-force=zstd:2 /mnt/podman-storage.img /var/lib/containers/storage
+          sudo systemctl start podman.service
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          submodules: true
+
+      - name: Set Image Tag
+        id: generate-tag
+        shell: bash
+        run: |
+          TAG="stable"
+          if [[ "${{ github.ref_name }}" != "main" ]]; then
+            TAG="testing"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Lowercase Registry
+        id: registry_case
+        uses: ASzc/change-string-case-action@ecd1412d078f2e06e9eedcbaa6fcd988151c3f82 # v8
+        with:
+          string: ${{ env.IMAGE_REGISTRY }}
+
+      # The live ISO uses the non-nvidia desktop image as its runtime
+      # (live session), then embeds the target image as the install payload.
+      # For handheld variants, the runtime is still the desktop image.
+      - name: Determine base image for live session
+        id: get-base-ref
+        run: |
+          # Live session runtime is always the plain desktop image
+          echo "ref=defenestraos" >> $GITHUB_OUTPUT
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Container Image
+        run: |
+          BASE_IMAGE="${{ steps.registry_case.outputs.lowercase }}/${{ steps.get-base-ref.outputs.ref }}:${{ steps.generate-tag.outputs.tag }}"
+          INSTALL_IMAGE_PAYLOAD="${{ steps.registry_case.outputs.lowercase }}/${{ matrix.image_name }}:${{ steps.generate-tag.outputs.tag }}"
+
+          sudo podman build \
+            --cap-add sys_admin \
+            --security-opt label=disable \
+            --build-arg BASE_IMAGE="$BASE_IMAGE" \
+            --build-arg INSTALL_IMAGE_PAYLOAD="$INSTALL_IMAGE_PAYLOAD" \
+            --build-arg FLATPAK_DIR_SHORTNAME="gnome_flatpaks" \
+            -t localhost/payload:latest installer/
+
+      - name: Build ISOs
+        uses: Zeglius/titanoboa@revamp-pr
+        id: build
+        with:
+          image-ref: localhost/payload:latest
+          iso-dest: ${{ matrix.image_name }}-${{ steps.generate-tag.outputs.tag }}-live-amd64.iso
+
+      - name: Move ISOs to Upload Directory
+        id: upload-directory
+        shell: bash
+        run: |
+          ISO_UPLOAD_DIR=${{ github.workspace }}/upload
+          ISO_PATH=${{ steps.build.outputs.iso-dest }}
+          ISO_NAME=$(basename ${ISO_PATH})
+
+          mkdir -p ${ISO_UPLOAD_DIR}
+          mv ${ISO_PATH} ${ISO_UPLOAD_DIR}
+          (cd ${ISO_UPLOAD_DIR} && sha256sum ${ISO_NAME} | tee ${ISO_NAME}-CHECKSUM)
+          echo "iso-upload-dir=${ISO_UPLOAD_DIR}" >> $GITHUB_OUTPUT
+
+      - name: Upload ISOs and Checksum to Job Artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.image_name }}-${{ steps.generate-tag.outputs.tag }}-live
+          path: ${{ steps.upload-directory.outputs.iso-upload-dir }}
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+          overwrite: true
