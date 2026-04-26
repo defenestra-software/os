@@ -37,6 +37,55 @@ dnf5 -y copr disable defenestra/defenestra
 # We stripped bazzite-portal, so we need this for first-boot user creation.
 dnf5 -y install gnome-initial-setup
 
+# Enterprise / network authentication & file sharing
+# Bazzite is gaming-focused and ships minimal enterprise support.
+# Bluefin is workstation-focused and ships a partial AD/Samba stack.
+# We add the FULL enterprise stack — gaming from Bazzite, enterprise from us.
+# Enables GNOME Initial Setup "Enterprise Login" page (requires realmd).
+# See: https://github.com/ublue-os/main/issues/1378
+#
+# SSSD meta-package pulls: sssd-ad, sssd-ipa, sssd-krb5, sssd-ldap, sssd-proxy
+# This covers AD, FreeIPA, Kerberos, LDAP, and legacy proxy — any enterprise
+# directory a user might encounter just works.
+#
+# Base Fedora Atomic already includes: sssd-common, sssd-client, sssd-kcm,
+# sssd-krb5-common, krb5-libs, cyrus-sasl-gssapi, nfs-utils, gssproxy,
+# samba-client, samba-client-libs, samba-common, cifs-utils, and all gvfs
+# backends (gvfs-smb, gvfs-nfs, gvfs-fuse, gvfs-goa). We don't re-add those.
+dnf5 -y install \
+    sssd \
+    sssd-dbus \
+    sssd-idp \
+    sssd-nfs-idmap \
+    sssd-passkey \
+    sssd-tools \
+    adcli \
+    realmd \
+    krb5-workstation \
+    oddjob \
+    oddjob-mkhomedir \
+    openldap-clients \
+    samba \
+    samba-common-tools \
+    samba-dcerpc \
+    samba-ldb-ldap-modules \
+    samba-winbind-clients \
+    samba-winbind-modules \
+    autofs \
+    davfs2 \
+    nfs4-acl-tools
+
+# Fix SSSD binary capabilities — Bazzite's build strips file caps from
+# SSSD helper binaries, breaking LDAP/Kerberos auth on atomic desktops.
+# Kinoite with same SSSD version works fine, so this is a build artifact issue.
+# See: https://github.com/ublue-os/bazzite/issues/1818
+if [ -f /usr/libexec/sssd/krb5_child ]; then
+    setcap cap_chown,cap_dac_override,cap_setgid,cap_setuid=ep /usr/libexec/sssd/krb5_child
+    setcap cap_chown,cap_dac_override,cap_setgid,cap_setuid=ep /usr/libexec/sssd/ldap_child
+    setcap cap_dac_read_search=p /usr/libexec/sssd/sssd_pam
+    echo ":: SSSD binary capabilities restored."
+fi
+
 # -----------------------------------------------------------------------------
 # Flatpak remote — defenestra repo
 # -----------------------------------------------------------------------------
