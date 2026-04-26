@@ -37,6 +37,10 @@ dnf5 -y copr disable defenestra/defenestra
 # We stripped bazzite-portal, so we need this for first-boot user creation.
 dnf5 -y install gnome-initial-setup
 
+# Additional shells. bash stays default, fish inherited from bazzite.
+# zsh = popular alternative, nushell = modern structured-pipe shell.
+dnf5 -y install zsh nushell
+
 # Enterprise / network authentication & file sharing
 # Bazzite is gaming-focused and ships minimal enterprise support.
 # Bluefin is workstation-focused and ships a partial AD/Samba stack.

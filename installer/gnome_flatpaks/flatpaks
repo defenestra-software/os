@@ -1,7 +1,8 @@
-app/org.mozilla.firefox/x86_64/stable
 app/com.mattjakeman.ExtensionManager/x86_64/stable
 app/com.github.tchx84.Flatseal/x86_64/stable
 app/net.nokyan.Resources/x86_64/stable
+app/com.ranfdev.DistroShelf/x86_64/stable
+app/org.gnome.Logs/x86_64/stable
 app/com.github.Matoking.protontricks/x86_64/stable
 app/com.vysp3r.ProtonPlus/x86_64/stable
 app/org.gnome.Calculator/x86_64/stable

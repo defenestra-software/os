@@ -52,9 +52,13 @@ rename_file /usr/bin/bazzite-steam-brand               /usr/bin/defenestra-steam
 rename_file /usr/bin/bazzite-rollback-helper            /usr/bin/defenestra-rollback-helper
 rename_file /usr/bin/bazzite-desktop-bootstrap         /usr/bin/defenestra-desktop-bootstrap
 
-# Update bruh alias if it exists
-if [ -f /usr/bin/bruh ]; then
-    sed -i 's/bazzite-rollback-helper/defenestra-rollback-helper/g' /usr/bin/bruh
+# Steam-brand: guard against missing videos (commissioned later)
+# bazzite-steam-brand was just renamed → defenestra-steam-brand. Inject early-exit
+# if /usr/share/defenestra/steam-videos/ doesn't exist yet.
+if [ -f /usr/bin/defenestra-steam-brand ]; then
+    sed -i '2a\
+# DefenestraOS: skip until startup/suspend videos are commissioned\
+[ -d /usr/share/defenestra/steam-videos ] || exit 0' /usr/bin/defenestra-steam-brand
 fi
 
 # -----------------------------------------------------------------------------
@@ -210,6 +214,11 @@ for dir in "${sed_dirs[@]}"; do
             -e 's/bazzite-neofetch/defenestra-fastfetch/g' \
             -e 's/bazzite-cli\.Brewfile/defenestra-cli.Brewfile/g' \
             -e 's/bazzite_detect_nvidia_support_status/defenestra_detect_nvidia_support_status/g' \
+            -e 's|/usr/share/ublue-os/bazzite/|/usr/share/defenestra/steam-videos/|g' \
+            -e 's|bazzite-suspend-oled\.webm|defenestra-suspend-oled.webm|g' \
+            -e 's|bazzite-suspend\.webm|defenestra-suspend.webm|g' \
+            -e 's|bazzite-oled\.webm|defenestra-oled.webm|g' \
+            -e 's|bazzite\.webm|defenestra.webm|g' \
             {} +
 done
 

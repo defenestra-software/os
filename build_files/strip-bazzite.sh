@@ -58,6 +58,9 @@ rm -f /usr/share/applications/discourse.desktop
 rm -f /usr/share/applications/system-update.desktop
 rm -f /usr/share/applications/bbrew.desktop
 
+# Easter-egg rollback alias — zero functional value, drop it
+rm -f /usr/bin/bruh
+
 # -----------------------------------------------------------------------------
 # Bazaar app store assets (RPM handles binary, these are leftover configs)
 # -----------------------------------------------------------------------------
