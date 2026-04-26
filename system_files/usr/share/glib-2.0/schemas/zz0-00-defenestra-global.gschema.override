@@ -21,8 +21,8 @@ experimental-features=['scale-monitor-framebuffer', 'xwayland-native-scaling']
 check-alive-timeout=uint32 20000
 
 [org.gnome.software]
-allow-updates=false
-download-updates=false
+allow-updates=true
+download-updates=true
 download-updates-notify=false
 
 [org.gnome.Ptyxis]
