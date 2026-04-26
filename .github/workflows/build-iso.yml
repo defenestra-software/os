@@ -68,10 +68,7 @@ jobs:
         id: generate-tag
         shell: bash
         run: |
-          TAG="stable"
-          if [[ "${{ github.ref_name }}" != "main" ]]; then
-            TAG="testing"
-          fi
+          TAG="latest"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
       - name: Lowercase Registry
@@ -90,11 +87,8 @@ jobs:
           echo "ref=defenestraos" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | sudo podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Container Image
         run: |
