@@ -42,6 +42,30 @@ dnf5 -y install gnome-initial-setup
 # zsh = popular alternative. nushell available via nix (`nix profile install nixpkgs#nushell`).
 dnf5 -y install zsh
 
+# Container tooling: toolbox (Fedora's, "Toolbx") complements distrobox
+# (already in bazzite). distrobox = arch/deb/rpm/snap user containers,
+# toolbox = Fedora-only seamless dev container. Both available, user picks.
+dnf5 -y install toolbox
+
+# Docker CE from upstream Docker Inc. Pattern from bazzite-dx: repo added
+# but disabled, install with --enable-repo for this transaction only.
+# Socket-activated: zero runtime cost until first `docker` invocation.
+docker_pkgs=(
+    containerd.io
+    docker-buildx-plugin
+    docker-ce
+    docker-ce-cli
+    docker-compose-plugin
+)
+dnf5 config-manager addrepo --from-repofile="https://download.docker.com/linux/fedora/docker-ce.repo"
+dnf5 config-manager setopt docker-ce-stable.enabled=0
+dnf5 -y install --enable-repo="docker-ce-stable" "${docker_pkgs[@]}"
+
+# iptable_nat for docker-in-docker (devcontainer compat)
+# https://github.com/ublue-os/bluefin/issues/2365
+mkdir -p /etc/modules-load.d
+echo iptable_nat > /etc/modules-load.d/defenestra-docker.conf
+
 # Nix package manager - F44 ships official RPMs.
 # nix-daemon sub-package provides systemd units (multi-user mode).
 # /var/nix holds the store; bound onto /nix via nix.mount unit at boot.
@@ -185,6 +209,9 @@ dnf5 -y remove glib2-devel
 
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
+
+# Docker: socket-activated, daemon starts on first use.
+systemctl enable docker.socket 2>/dev/null || true
 
 systemctl enable defenestra-flatpak-manager.service 2>/dev/null || true
 systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
