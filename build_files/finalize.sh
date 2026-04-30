@@ -3,10 +3,10 @@
 set -ouex pipefail
 
 # =============================================================================
-# DefenestraOS - finalize image
+# defenestraOS - finalize image
 # =============================================================================
 
-echo ":: Finalizing DefenestraOS image..."
+echo ":: Finalizing defenestraOS image..."
 
 # Compile GSchema overrides
 if [ -d /usr/share/glib-2.0/schemas ]; then

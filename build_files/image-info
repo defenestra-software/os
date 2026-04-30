@@ -3,7 +3,7 @@
 set -ouex pipefail
 
 # =============================================================================
-# DefenestraOS - stamp OS identity into image
+# defenestraOS - stamp OS identity into image
 # =============================================================================
 
 IMAGE_NAME="${IMAGE_NAME:-defenestraos}"
@@ -11,7 +11,7 @@ IMAGE_VENDOR="${IMAGE_VENDOR:-defenestra}"
 IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 IMAGE_VARIANT="${IMAGE_VARIANT:-desktop}"
 VERSION_TAG="${VERSION_TAG:-$(date +%Y%m%d)}"
-VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS}"
+VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS}"
 
 echo ":: Writing OS identity: ${IMAGE_NAME} (${IMAGE_VARIANT})"
 
@@ -20,7 +20,7 @@ echo ":: Writing OS identity: ${IMAGE_NAME} (${IMAGE_VARIANT})"
 # -----------------------------------------------------------------------------
 
 cat > /usr/lib/os-release <<EOF
-NAME="DefenestraOS"
+NAME="defenestraOS"
 PRETTY_NAME="${VERSION_PRETTY}"
 ID=defenestraos
 ID_LIKE="fedora"

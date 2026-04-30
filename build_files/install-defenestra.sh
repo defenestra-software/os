@@ -3,16 +3,16 @@
 set -ouex pipefail
 
 # =============================================================================
-# Install DefenestraOS packages and overlay system files
+# Install defenestraOS packages and overlay system files
 #
 # Bazzite base already handles gaming stack, services, kernel, drivers, etc.
-# We only add what's unique to DefenestraOS here.
+# We only add what's unique to defenestraOS here.
 # =============================================================================
 
-echo ":: Installing DefenestraOS packages..."
+echo ":: Installing defenestraOS packages..."
 
 # -----------------------------------------------------------------------------
-# DefenestraOS COPR packages (when available)
+# defenestraOS COPR packages (when available)
 # -----------------------------------------------------------------------------
 
 dnf5 -y copr enable defenestra/defenestra
@@ -120,7 +120,7 @@ flatpak remote-add --if-not-exists --from defenestra \
 # -----------------------------------------------------------------------------
 # Overlay system files
 #
-# Only DefenestraOS-specific overlays:
+# Only defenestraOS-specific overlays:
 #   usr/share/glib-2.0/schemas/        - Our GSchema overrides
 #   usr/share/gnome-shell/extensions/   - Our bundled GNOME extensions
 #   usr/share/backgrounds/              - Our wallpapers
@@ -196,4 +196,4 @@ systemctl --global enable defenestra-user-setup.service 2>/dev/null || true
 systemctl enable defenestra-tdpfix.service 2>/dev/null || true
 systemctl enable defenestra-autologin.service 2>/dev/null || true
 
-echo ":: DefenestraOS packages installed."
+echo ":: defenestraOS packages installed."

@@ -1,12 +1,12 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# DefenestraOS live session login script
+# defenestraOS live session login script
 # Shows hardware info via conky and welcome dialog
 
 # Require UEFI
 if [[ ! -d /sys/firmware/efi ]]; then
     yad --undecorated --on-top --timeout=0 --button=Shutdown:0 \
-        --text="DefenestraOS does not support CSM/Legacy Boot. Please boot into your UEFI/BIOS settings, disable CSM/Legacy Mode, and reboot." || true
+        --text="defenestraOS does not support CSM/Legacy Boot. Please boot into your UEFI/BIOS settings, disable CSM/Legacy Mode, and reboot." || true
     systemctl poweroff || shutdown -h now || true
 fi
 
@@ -14,7 +14,7 @@ welcome_dialog() {
     _EXITLOCK=1
     _RETVAL=0
     local welcome_text="
-Welcome to the DefenestraOS Live ISO\\!
+Welcome to the defenestraOS Live ISO\\!
 
 The Live ISO is designed for installation and troubleshooting.
 It does <b>not</b> have drivers and is <b>not capable of playing games.</b>
@@ -30,7 +30,7 @@ does not represent the installed experience."
             --buttons-layout=center \
             --title="Welcome" \
             --text="$welcome_text" \
-            --button="Install DefenestraOS":10 \
+            --button="Install defenestraOS":10 \
             --button="Launch Bootloader Restoring tool":20 \
             --button="Close dialog":0
         _RETVAL=$?
@@ -75,7 +75,7 @@ for device in "${!mount[@]}"; do
             [[ "$base" == "fedora" || "$base" == "boot" ]] && continue
             grub=("$dir"/grub*.efi)
             (( ! ${#grub[@]} )) && continue
-            echo "An existing GRUB bootloader was found on $device at ${dir#$mnt}\nDefenestraOS does not support dual boot with other Linux installations.\nInstalls to this disk that attempt to reuse this EFI partition will fail.\nEither DefenestraOS must be installed to a different disk, or this partition/bootloader must be removed.\n"
+            echo "An existing GRUB bootloader was found on $device at ${dir#$mnt}\ndefenestraOS does not support dual boot with other Linux installations.\nInstalls to this disk that attempt to reuse this EFI partition will fail.\nEither defenestraOS must be installed to a different disk, or this partition/bootloader must be removed.\n"
         done
     ' || true)
     [ "$msg" ] || continue

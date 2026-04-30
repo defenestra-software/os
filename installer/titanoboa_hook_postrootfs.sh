@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# DefenestraOS post-rootfs hook for live ISO
+# defenestraOS post-rootfs hook for live ISO
 # Installs Anaconda, configures live session, sets up installer kickstart
 
 set -exo pipefail
@@ -55,7 +55,7 @@ SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
 
 : ${VARIANT_ID:?}
 
-echo "DefenestraOS release $VERSION_ID" >/etc/system-release
+echo "defenestraOS release $VERSION_ID" >/etc/system-release
 
 # Anaconda installer branding (sidebar, header, CSS)
 if [ -d /src/branding ]; then
