@@ -1,0 +1,13 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# defenestraOS brew wrapper. Routes to the shared linuxbrew system user so
+# the install prefix has one stable owner regardless of which user invoked.
+# Restricted to wheel via /etc/sudoers.d/defenestra-brew.
+#
+# cd into the brew prefix first: brew refuses to run if its CWD is not
+# readable by the target user, and the caller's $PWD (e.g. ~/some/dir) is
+# typically not world-readable.
+cd /var/home/linuxbrew || cd /
+# -H sets HOME to linuxbrew's home so brew caches/taps/state land in the
+# shared prefix instead of the caller's home.
+exec sudo -H -u linuxbrew /var/home/linuxbrew/.linuxbrew/bin/brew "$@"

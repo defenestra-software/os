@@ -1,0 +1,11 @@
+[Unit]
+Description=defenestraOS Homebrew daily update timer
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1d
+Persistent=true
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target
