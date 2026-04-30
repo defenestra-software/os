@@ -1,8 +1,9 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
 # =============================================================================
-# DefenestraOS — stamp OS identity into image
+# DefenestraOS - stamp OS identity into image
 # =============================================================================
 
 IMAGE_NAME="${IMAGE_NAME:-defenestraos}"

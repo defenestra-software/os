@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
 # =============================================================================
@@ -24,7 +25,7 @@ rename_file() {
 }
 
 # -----------------------------------------------------------------------------
-# Scripts — /usr/libexec/
+# Scripts - /usr/libexec/
 # -----------------------------------------------------------------------------
 
 rename_file /usr/libexec/bazzite-user-setup           /usr/libexec/defenestra-user-setup
@@ -43,7 +44,7 @@ rename_file /usr/libexec/bazzite-tdpfix                /usr/libexec/defenestra-t
 rename_file /usr/libexec/bazzite-autologin             /usr/libexec/defenestra-autologin
 
 # -----------------------------------------------------------------------------
-# Scripts — /usr/bin/
+# Scripts - /usr/bin/
 # -----------------------------------------------------------------------------
 
 rename_file /usr/bin/bazzite-steam                     /usr/bin/defenestra-steam
@@ -150,7 +151,7 @@ for f in /etc/dconf/db/distro.d/locks/*bazzite*; do
 done
 
 # -----------------------------------------------------------------------------
-# Tuned profiles (optional — cosmetic rename)
+# Tuned profiles (optional - cosmetic rename)
 # -----------------------------------------------------------------------------
 
 for d in /usr/lib/tuned/profiles/*-bazzite*; do

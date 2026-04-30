@@ -1,4 +1,5 @@
-# DefenestraOS default Flatpaks — installed on first boot
+# SPDX-License-Identifier: GPL-3.0-or-later
+# DefenestraOS default Flatpaks - installed on first boot
 # One app ID per line. Lines starting with # are comments.
 
 # Browser

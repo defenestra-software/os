@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
 # =============================================================================
@@ -12,7 +13,7 @@ set -ouex pipefail
 echo ":: Stripping bazzite branding and onboarding..."
 
 # -----------------------------------------------------------------------------
-# RPMs — clean package removal
+# RPMs - clean package removal
 # -----------------------------------------------------------------------------
 
 # Verified against live bazzite 43.20260403.0 (Silverblue)
@@ -58,7 +59,7 @@ rm -f /usr/share/applications/discourse.desktop
 rm -f /usr/share/applications/system-update.desktop
 rm -f /usr/share/applications/bbrew.desktop
 
-# Easter-egg rollback alias — zero functional value, drop it
+# Easter-egg rollback alias - zero functional value, drop it
 rm -f /usr/bin/bruh
 
 # -----------------------------------------------------------------------------
@@ -68,7 +69,7 @@ rm -f /usr/bin/bruh
 rm -rf /usr/share/ublue-os/bazaar/
 
 # -----------------------------------------------------------------------------
-# MOTD — remove data, script, and all login triggers
+# MOTD - remove data, script, and all login triggers
 # -----------------------------------------------------------------------------
 
 rm -rf /usr/share/ublue-os/motd/

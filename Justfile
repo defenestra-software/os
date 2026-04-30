@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 export image_name := env("IMAGE_NAME", "defenestraos")
 export default_tag := env("DEFAULT_TAG", "latest")
 export base_tag := env("BASE_TAG", "stable")

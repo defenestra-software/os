@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # DefenestraOS post-rootfs hook for live ISO
 # Installs Anaconda, configures live session, sets up installer kickstart
 
@@ -7,7 +8,7 @@ set -exo pipefail
 source /etc/os-release
 
 # Clear versionlocks so Anaconda can install (needs stock NetworkManager)
-# The live session doesn't need bazzite-patched packages — the installed
+# The live session doesn't need bazzite-patched packages - the installed
 # system gets them from the embedded OS image, not the live environment.
 dnf -y versionlock clear
 
@@ -16,7 +17,7 @@ dnf install -y --enable-repo=fedora-cisco-openh264 --allowerasing \
     firefox anaconda-live libblockdev-{btrfs,lvm,dm}
 
 # Branding for the live session
-# Don't replace fedora-logos — anaconda-webui depends on it directly.
+# Don't replace fedora-logos - anaconda-webui depends on it directly.
 # Our branding RPM is already in the base OS image (which gets installed).
 # For the live ISO, just overlay our logos into the pixmaps fedora-logos owns.
 cp -f /usr/share/icons/hicolor/scalable/places/defenestra-logo.svg \
@@ -62,7 +63,7 @@ if [ -d /src/branding ]; then
     cp -r /src/branding/* /usr/share/anaconda/pixmaps/
 fi
 
-# Installer icon — use defenestra logo
+# Installer icon - use defenestra logo
 for f in \
     /usr/share/icons/hicolor/48x48/apps/org.fedoraproject.AnacondaInstaller.svg \
     /usr/share/icons/hicolor/scalable/apps/org.fedoraproject.AnacondaInstaller.svg; do
@@ -152,7 +153,7 @@ ostreecontainer --url=$imageref:$imagetag --transport=containers-storage --no-si
 
 EOF
 
-# Signed Images — switch to registry transport after install
+# Signed Images - switch to registry transport after install
 cat <<EOF >>/usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %post --erroronfail --log=/tmp/anacoda_custom_logs/bootc-switch.log
 bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry $imageref:$imagetag

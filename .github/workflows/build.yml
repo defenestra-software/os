@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 ---
 name: Build container images
 on:
@@ -14,7 +15,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_DESC: "DefenestraOS — Cloud-native gaming and workstation OS"
+  IMAGE_DESC: "defenestraOS - Cloud-native gaming and workstation OS"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue,defenestra,gaming,workstation"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
@@ -41,9 +42,9 @@ jobs:
           - defenestraos-nvidia
           - defenestraos-nvidia-open
           - defenestraos-handheld
-          # defenestraos-handheld-nvidia — disabled: no NVIDIA handheld hardware exists currently
+          # defenestraos-handheld-nvidia - disabled: no NVIDIA handheld hardware exists currently
           # - defenestraos-handheld-nvidia
-          # defenestraos-handheld-nvidia-open — disabled: no NVIDIA handheld hardware + Bazzite missing stable tag
+          # defenestraos-handheld-nvidia-open - disabled: no NVIDIA handheld hardware + Bazzite missing stable tag
           # - defenestraos-handheld-nvidia-open
 
     steps:

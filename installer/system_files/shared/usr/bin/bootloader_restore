@@ -1,4 +1,5 @@
 #!/usr/bin/env -S /usr/bin/pkexec --keep-cwd /usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # DefenestraOS Bootloader Restoring Tool
 
 set -o pipefail

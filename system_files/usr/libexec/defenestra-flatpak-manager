@@ -1,6 +1,7 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 
-# Script version — bump VER to force re-run on update
+# Script version - bump VER to force re-run on update
 VER=2
 SCRIPT_HASH=$(tr -d '[:space:]' <"$0" | sha256sum | cut -d ' ' -f 1)
 VER="$VER-$SCRIPT_HASH"

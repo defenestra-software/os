@@ -1,8 +1,9 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
 # =============================================================================
-# DefenestraOS — finalize image
+# DefenestraOS - finalize image
 # =============================================================================
 
 echo ":: Finalizing DefenestraOS image..."
@@ -24,7 +25,7 @@ dconf update 2>/dev/null || true
 # BIB (bootc-image-builder) reads repo configs and validates GPG keys even for
 # disabled repos. Several bazzite repos have stale/missing GPG keys that cause
 # BIB to fail (terra-mesa, rpmfusion with wrong releasever, etc).
-# These repos aren't needed post-build — packages are already installed.
+# These repos aren't needed post-build - packages are already installed.
 for repo in /etc/yum.repos.d/*.repo; do
     case "$(basename "$repo")" in
         fedora.repo|fedora-updates.repo|fedora-updates-archive.repo)
@@ -36,7 +37,7 @@ for repo in /etc/yum.repos.d/*.repo; do
     esac
 done
 
-# Rebuild initramfs — embeds our plymouth branding into boot image
+# Rebuild initramfs - embeds our plymouth branding into boot image
 QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' kernel)"
 echo ":: Rebuilding initramfs for kernel ${QUALIFIED_KERNEL}..."
 /usr/bin/dracut \

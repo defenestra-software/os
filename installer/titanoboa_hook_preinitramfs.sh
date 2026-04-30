@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Swap bazzite kernel with vanilla Fedora kernel for secure boot compatibility
 # in the live ISO. The installed system will use the bazzite kernel.
 

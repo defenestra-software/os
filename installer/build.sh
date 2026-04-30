@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # DefenestraOS Live ISO build script
 # Adapted from bazzite's installer/build.sh
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 [org.gnome.desktop.wm.preferences]
 button-layout='appmenu:minimize,maximize,close'
 titlebar-font='Noto Sans Medium 11'
