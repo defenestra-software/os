@@ -38,8 +38,27 @@ dnf5 -y copr disable defenestra/defenestra
 dnf5 -y install gnome-initial-setup
 
 # Additional shells. bash stays default, fish inherited from bazzite.
-# zsh = popular alternative, nushell = modern structured-pipe shell.
-dnf5 -y install zsh nushell
+# zsh = popular alternative. nushell available via nix (`nix profile install nixpkgs#nushell`).
+dnf5 -y install zsh
+
+# Nix package manager — F44 ships official RPMs.
+# nix-daemon sub-package provides systemd units (multi-user mode).
+# /var/nix holds the store; bound onto /nix via nix.mount unit at boot.
+# Seed /var/nix from RPM-shipped /nix so bind mount doesn't hide store/db.
+dnf5 -y install nix nix-daemon
+mkdir -p /var/nix
+cp -a /nix/. /var/nix/
+rm -rf /nix/*
+
+# SELinux: Fedora ships no policy for /nix paths. Use Determinate Systems'
+# nix.pp policy module (vendored at system_files/usr/share/selinux/packages/
+# defenestra/nix.pp) — provides fcontext rules for store/socket/profiles AND
+# the `allow init_t default_t:lnk_file read` rule that fcontext alone misses
+# (init_t needs to traverse symlinks in daemon socket activation path).
+# Source .te/.fc shipped alongside .pp for audit.
+# Load from /ctx (build context bind) since system_files overlay runs later.
+semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
+restorecon -RF /var/nix
 
 # Enterprise / network authentication & file sharing
 # Bazzite is gaming-focused and ships minimal enterprise support.
@@ -162,6 +181,9 @@ dnf5 -y remove glib2-devel
 # rename-scripts.sh renamed them to defenestra-*.
 # We re-enable them here under their new names.
 # -----------------------------------------------------------------------------
+
+systemctl enable nix.mount 2>/dev/null || true
+systemctl enable nix-daemon.socket 2>/dev/null || true
 
 systemctl enable defenestra-flatpak-manager.service 2>/dev/null || true
 systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
