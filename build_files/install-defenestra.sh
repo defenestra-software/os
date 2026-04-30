@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
 # =============================================================================
@@ -16,7 +17,7 @@ echo ":: Installing DefenestraOS packages..."
 
 dnf5 -y copr enable defenestra/defenestra
 # fedora-logos is a defenestra fork (42.0.1-200.defenestra) that replaces the
-# upstream 42.0.1-2.fc43 — ships our pixmap/favicon/plymouth overrides baked in.
+# upstream 42.0.1-2.fc43 - ships our pixmap/favicon/plymouth overrides baked in.
 # defenestra-branding ships defenestra-specific icons that don't collide with
 # fedora-logos paths.
 dnf5 -y upgrade --refresh fedora-logos
@@ -33,7 +34,7 @@ dnf5 -y install \
 # dnf5 -y install defenestra-store
 dnf5 -y copr disable defenestra/defenestra
 
-# gnome-initial-setup — bazzite doesn't include it (uses their own portal).
+# gnome-initial-setup - bazzite doesn't include it (uses their own portal).
 # We stripped bazzite-portal, so we need this for first-boot user creation.
 dnf5 -y install gnome-initial-setup
 
@@ -41,7 +42,7 @@ dnf5 -y install gnome-initial-setup
 # zsh = popular alternative. nushell available via nix (`nix profile install nixpkgs#nushell`).
 dnf5 -y install zsh
 
-# Nix package manager — F44 ships official RPMs.
+# Nix package manager - F44 ships official RPMs.
 # nix-daemon sub-package provides systemd units (multi-user mode).
 # /var/nix holds the store; bound onto /nix via nix.mount unit at boot.
 # Seed /var/nix from RPM-shipped /nix so bind mount doesn't hide store/db.
@@ -52,7 +53,7 @@ rm -rf /nix/*
 
 # SELinux: Fedora ships no policy for /nix paths. Use Determinate Systems'
 # nix.pp policy module (vendored at system_files/usr/share/selinux/packages/
-# defenestra/nix.pp) — provides fcontext rules for store/socket/profiles AND
+# defenestra/nix.pp) - provides fcontext rules for store/socket/profiles AND
 # the `allow init_t default_t:lnk_file read` rule that fcontext alone misses
 # (init_t needs to traverse symlinks in daemon socket activation path).
 # Source .te/.fc shipped alongside .pp for audit.
@@ -63,12 +64,12 @@ restorecon -RF /var/nix
 # Enterprise / network authentication & file sharing
 # Bazzite is gaming-focused and ships minimal enterprise support.
 # Bluefin is workstation-focused and ships a partial AD/Samba stack.
-# We add the FULL enterprise stack — gaming from Bazzite, enterprise from us.
+# We add the FULL enterprise stack - gaming from Bazzite, enterprise from us.
 # Enables GNOME Initial Setup "Enterprise Login" page (requires realmd).
 # See: https://github.com/ublue-os/main/issues/1378
 #
 # SSSD meta-package pulls: sssd-ad, sssd-ipa, sssd-krb5, sssd-ldap, sssd-proxy
-# This covers AD, FreeIPA, Kerberos, LDAP, and legacy proxy — any enterprise
+# This covers AD, FreeIPA, Kerberos, LDAP, and legacy proxy - any enterprise
 # directory a user might encounter just works.
 #
 # Base Fedora Atomic already includes: sssd-common, sssd-client, sssd-kcm,
@@ -98,7 +99,7 @@ dnf5 -y install \
     davfs2 \
     nfs4-acl-tools
 
-# Fix SSSD binary capabilities — Bazzite's build strips file caps from
+# Fix SSSD binary capabilities - Bazzite's build strips file caps from
 # SSSD helper binaries, breaking LDAP/Kerberos auth on atomic desktops.
 # Kinoite with same SSSD version works fine, so this is a build artifact issue.
 # See: https://github.com/ublue-os/bazzite/issues/1818
@@ -110,7 +111,7 @@ if [ -f /usr/libexec/sssd/krb5_child ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# Flatpak remote — defenestra repo
+# Flatpak remote - defenestra repo
 # -----------------------------------------------------------------------------
 
 flatpak remote-add --if-not-exists --from defenestra \
@@ -120,10 +121,10 @@ flatpak remote-add --if-not-exists --from defenestra \
 # Overlay system files
 #
 # Only DefenestraOS-specific overlays:
-#   usr/share/glib-2.0/schemas/        — Our GSchema overrides
-#   usr/share/gnome-shell/extensions/   — Our bundled GNOME extensions
-#   usr/share/backgrounds/              — Our wallpapers
-#   etc/dconf/db/distro.d/              — Our dconf database
+#   usr/share/glib-2.0/schemas/        - Our GSchema overrides
+#   usr/share/gnome-shell/extensions/   - Our bundled GNOME extensions
+#   usr/share/backgrounds/              - Our wallpapers
+#   etc/dconf/db/distro.d/              - Our dconf database
 # -----------------------------------------------------------------------------
 
 if [ -d /ctx/system_files ] && [ "$(ls -A /ctx/system_files 2>/dev/null)" ]; then
@@ -149,7 +150,7 @@ BUNDLED_EXT_DST="/usr/share/gnome-shell/extensions"
 
 dnf5 -y install glib2-devel
 
-# Clipboard Indicator — straightforward copy
+# Clipboard Indicator - straightforward copy
 if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
     cp -r "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" "${BUNDLED_EXT_DST}/"
     if [ -d "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas" ]; then
@@ -157,7 +158,7 @@ if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
     fi
 fi
 
-# ArcMenu — flatten src/ to root, compile resources
+# ArcMenu - flatten src/ to root, compile resources
 if [ -d "${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com" ]; then
     ARCMENU_SRC="${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com"
     ARCMENU_DST="${BUNDLED_EXT_DST}/arcmenu@arcmenu.com"

@@ -1,16 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # =============================================================================
 # DefenestraOS Container Build
 #
-# Based on Bazzite images — inherits gaming kernel, drivers, and gaming stack.
+# Based on Bazzite images; inherits gaming kernel, drivers, and gaming stack.
 # We strip bazzite branding/onboarding and overlay defenestra identity.
 #
 # Targets (select with --target):
-#   defenestraos                      — desktop, AMD/Intel
-#   defenestraos-nvidia               — desktop, NVIDIA closed (GTX 10xx+)
-#   defenestraos-nvidia-open          — desktop, NVIDIA open (RTX 20xx+)
-#   defenestraos-handheld             — handheld/deck, AMD/Intel
-#   defenestraos-handheld-nvidia      — handheld/deck, NVIDIA closed
-#   defenestraos-handheld-nvidia-open — handheld/deck, NVIDIA open
+#   defenestraos                      - desktop, AMD/Intel
+#   defenestraos-nvidia               - desktop, NVIDIA closed (GTX 10xx+)
+#   defenestraos-nvidia-open          - desktop, NVIDIA open (RTX 20xx+)
+#   defenestraos-handheld             - handheld/deck, AMD/Intel
+#   defenestraos-handheld-nvidia      - handheld/deck, NVIDIA closed
+#   defenestraos-handheld-nvidia-open - handheld/deck, NVIDIA open
 # =============================================================================
 
 ARG BASE_TAG="${BASE_TAG:-stable}"
@@ -28,7 +29,7 @@ COPY build_files /build_files
 COPY system_files /system_files
 
 # =============================================================================
-# DESKTOP — AMD/Intel
+# DESKTOP - AMD/Intel
 # =============================================================================
 
 FROM ${BASE_DESKTOP} AS defenestraos
@@ -55,7 +56,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
 # =============================================================================
-# DESKTOP — NVIDIA closed
+# DESKTOP - NVIDIA closed
 # =============================================================================
 
 FROM ${BASE_DESKTOP_NVIDIA} AS defenestraos-nvidia
@@ -82,7 +83,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
 # =============================================================================
-# DESKTOP — NVIDIA open
+# DESKTOP - NVIDIA open
 # =============================================================================
 
 FROM ${BASE_DESKTOP_NVIDIA_OPEN} AS defenestraos-nvidia-open
@@ -109,7 +110,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
 # =============================================================================
-# HANDHELD — AMD/Intel
+# HANDHELD - AMD/Intel
 # =============================================================================
 
 FROM ${BASE_HANDHELD} AS defenestraos-handheld
@@ -136,7 +137,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
 # =============================================================================
-# HANDHELD — NVIDIA closed
+# HANDHELD - NVIDIA closed
 # =============================================================================
 
 FROM ${BASE_HANDHELD_NVIDIA} AS defenestraos-handheld-nvidia
@@ -163,7 +164,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
 # =============================================================================
-# HANDHELD — NVIDIA open
+# HANDHELD - NVIDIA open
 # =============================================================================
 
 FROM ${BASE_HANDHELD_NVIDIA_OPEN} AS defenestraos-handheld-nvidia-open

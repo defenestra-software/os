@@ -1,2 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 [org.gnome.mutter]
 experimental-features=['scale-monitor-framebuffer', 'xwayland-native-scaling', 'kms-modifiers']

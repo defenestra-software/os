@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 # DefenestraOS live session login script
 # Shows hardware info via conky and welcome dialog
 
