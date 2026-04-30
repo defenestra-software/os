@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Wheel members can run brew as the linuxbrew system user without password.
+# Non-admin users can still run brew-installed *binaries* (jq, htop, etc.)
+# from PATH, just not invoke `brew` itself to install/upgrade.
+%wheel ALL=(linuxbrew) NOPASSWD: /var/home/linuxbrew/.linuxbrew/bin/brew

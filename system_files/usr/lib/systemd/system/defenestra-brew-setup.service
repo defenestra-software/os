@@ -1,0 +1,19 @@
+[Unit]
+Description=defenestraOS Homebrew first-boot setup
+ConditionPathExists=/usr/share/homebrew.tar.zst
+ConditionPathExists=!/var/home/linuxbrew/.linuxbrew/bin/brew
+After=local-fs.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/mkdir -p /tmp/defenestra-brew
+ExecStartPre=/usr/bin/install -d -o linuxbrew -g linuxbrew -m 0755 /var/home/linuxbrew
+ExecStart=/usr/bin/tar --zstd -xf /usr/share/homebrew.tar.zst -C /tmp/defenestra-brew
+ExecStart=/usr/bin/cp -R -n /tmp/defenestra-brew/home/linuxbrew/.linuxbrew /var/home/linuxbrew/
+ExecStart=/usr/bin/chown -R linuxbrew:linuxbrew /var/home/linuxbrew
+ExecStartPost=/usr/bin/rm -rf /tmp/defenestra-brew
+
+[Install]
+WantedBy=multi-user.target

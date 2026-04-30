@@ -1,0 +1,17 @@
+[Unit]
+Description=defenestraOS Homebrew daily update
+ConditionPathExists=/var/home/linuxbrew/.linuxbrew/bin/brew
+After=network-online.target defenestra-brew-setup.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=linuxbrew
+Group=linuxbrew
+WorkingDirectory=/var/home/linuxbrew
+Environment=HOME=/var/home/linuxbrew
+Environment=HOMEBREW_NO_ANALYTICS=1
+Environment=HOMEBREW_NO_AUTO_UPDATE=0
+ExecStart=/var/home/linuxbrew/.linuxbrew/bin/brew update --quiet
+Nice=10
+IOSchedulingClass=idle

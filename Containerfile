@@ -23,7 +23,10 @@ ARG BASE_HANDHELD="${BASE_HANDHELD:-ghcr.io/ublue-os/bazzite-deck-gnome:${BASE_T
 ARG BASE_HANDHELD_NVIDIA="${BASE_HANDHELD_NVIDIA:-ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:${BASE_TAG}}"
 ARG BASE_HANDHELD_NVIDIA_OPEN="${BASE_HANDHELD_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:${BASE_TAG}}"
 
-# Build context
+# Build context. Homebrew tarball already lives in base image at
+# /usr/share/homebrew.tar.zst (Bazzite chain inherits it from uBlue main).
+# We mask upstream brew-* services in install-defenestra.sh and run our
+# own defenestra-brew-setup.service that extracts as the linuxbrew system user.
 FROM scratch AS ctx
 COPY build_files /build_files
 COPY system_files /system_files

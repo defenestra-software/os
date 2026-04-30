@@ -42,6 +42,20 @@ dnf5 -y install gnome-initial-setup
 # zsh = popular alternative. nushell available via nix (`nix profile install nixpkgs#nushell`).
 dnf5 -y install zsh
 
+# Homebrew: tarball already at /usr/share/homebrew.tar.zst (inherited from
+# uBlue main via Bazzite). linuxbrew system user comes from sysusers.d drop-in
+# (UID < 1000 hides it from gnome-initial-setup). Wrapper at /usr/bin/brew
+# routes invocations through `sudo -u linuxbrew` so the prefix has one stable
+# owner. Wheel-only via /etc/sudoers.d/defenestra-brew.
+#
+# Upstream brew-setup runs as first-login user (uid 1000); we mask their
+# services so our defenestra-brew-* units own the lifecycle as `linuxbrew`.
+# Upstream /etc/profile.d/brew.sh stays, it correctly sets PATH so
+# brew-installed binaries work for all users.
+systemd-sysusers /ctx/system_files/usr/lib/sysusers.d/defenestra-linuxbrew.conf
+systemctl mask brew-setup.service brew-update.service brew-update.timer \
+    brew-upgrade.service brew-upgrade.timer 2>/dev/null || true
+
 # Container tooling: toolbox (Fedora's, "Toolbx") complements distrobox
 # (already in bazzite). distrobox = arch/deb/rpm/snap user containers,
 # toolbox = Fedora-only seamless dev container. Both available, user picks.
@@ -212,6 +226,10 @@ systemctl enable nix-daemon.socket 2>/dev/null || true
 
 # Docker: socket-activated, daemon starts on first use.
 systemctl enable docker.socket 2>/dev/null || true
+
+# Homebrew: first-boot extraction + daily update timer.
+systemctl enable defenestra-brew-setup.service 2>/dev/null || true
+systemctl enable defenestra-brew-update.timer 2>/dev/null || true
 
 systemctl enable defenestra-flatpak-manager.service 2>/dev/null || true
 systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
