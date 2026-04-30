@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # =============================================================================
-# DefenestraOS Container Build
+# defenestraOS Container Build
 #
 # Based on Bazzite images; inherits gaming kernel, drivers, and gaming stack.
 # We strip bazzite branding/onboarding and overlay defenestra identity.
@@ -39,7 +39,7 @@ ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 ARG IMAGE_VARIANT="desktop"
 ARG VERSION_TAG="${VERSION_TAG}"
-ARG VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS}"
+ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS}"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -66,7 +66,7 @@ ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 ARG IMAGE_VARIANT="desktop-nvidia"
 ARG VERSION_TAG="${VERSION_TAG}"
-ARG VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS NVIDIA}"
+ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS NVIDIA}"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -93,7 +93,7 @@ ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 ARG IMAGE_VARIANT="desktop-nvidia-open"
 ARG VERSION_TAG="${VERSION_TAG}"
-ARG VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS NVIDIA Open}"
+ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS NVIDIA Open}"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -120,7 +120,7 @@ ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 ARG IMAGE_VARIANT="handheld"
 ARG VERSION_TAG="${VERSION_TAG}"
-ARG VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS Handheld}"
+ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS Handheld}"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -147,7 +147,7 @@ ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 ARG IMAGE_VARIANT="handheld-nvidia"
 ARG VERSION_TAG="${VERSION_TAG}"
-ARG VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS Handheld NVIDIA}"
+ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS Handheld NVIDIA}"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -174,7 +174,7 @@ ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
 ARG IMAGE_VARIANT="handheld-nvidia-open"
 ARG VERSION_TAG="${VERSION_TAG}"
-ARG VERSION_PRETTY="${VERSION_PRETTY:-DefenestraOS Handheld NVIDIA Open}"
+ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS Handheld NVIDIA Open}"
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \

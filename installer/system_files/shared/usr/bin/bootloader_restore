@@ -1,6 +1,6 @@
 #!/usr/bin/env -S /usr/bin/pkexec --keep-cwd /usr/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# DefenestraOS Bootloader Restoring Tool
+# defenestraOS Bootloader Restoring Tool
 
 set -o pipefail
 if [[ $DEBUG -eq 1 ]]; then
@@ -26,7 +26,7 @@ if [[ $PKEXEC_UID -eq 0 ]]; then
     die "You must not execute this script as root."
 fi
 
-_APP_NAME="DefenestraOS Bootloader Restoring Tool"
+_APP_NAME="defenestraOS Bootloader Restoring Tool"
 DRY_RUN=${DRY_RUN:-0}
 MNT=/tmp/mnt
 trap 'umount --recursive $MNT/boot 2>/dev/null' EXIT
@@ -37,7 +37,7 @@ DISK_PATH=$(
         echo "$size"
         echo "$model"
     done | yad --list --no-buttons \
-        --text="Double-click the disk where you installed DefenestraOS:" --width=500 --height=300 \
+        --text="Double-click the disk where you installed defenestraOS:" --width=500 --height=300 \
         --column="Device" \
         --column="Size" \
         --column="Model" \

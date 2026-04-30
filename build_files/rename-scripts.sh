@@ -58,7 +58,7 @@ rename_file /usr/bin/bazzite-desktop-bootstrap         /usr/bin/defenestra-deskt
 # if /usr/share/defenestra/steam-videos/ doesn't exist yet.
 if [ -f /usr/bin/defenestra-steam-brand ]; then
     sed -i '2a\
-# DefenestraOS: skip until startup/suspend videos are commissioned\
+# defenestraOS: skip until startup/suspend videos are commissioned\
 [ -d /usr/share/defenestra/steam-videos ] || exit 0' /usr/bin/defenestra-steam-brand
 fi
 
@@ -227,7 +227,7 @@ done
 for f in /usr/share/polkit-1/actions/org.defenestra.*.policy; do
     [ -f "$f" ] || continue
     sed -i \
-        -e 's|Bazzite|DefenestraOS|g' \
+        -e 's|Bazzite|defenestraOS|g' \
         -e 's|bazzite\.gg|defenestra.io|g' \
         "$f"
 done

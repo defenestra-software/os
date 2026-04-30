@@ -3,7 +3,7 @@
 set -ouex pipefail
 
 # =============================================================================
-# DefenestraOS Build Script
+# defenestraOS Build Script
 #
 # Single entry point matching sibling image patterns (bazzite, bluefin, aurora).
 # Called from Containerfile with build context mounted at /ctx.
@@ -11,7 +11,7 @@ set -ouex pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo ":: DefenestraOS build starting..."
+echo ":: defenestraOS build starting..."
 echo "   IMAGE_NAME=${IMAGE_NAME:-unset}"
 echo "   IMAGE_VARIANT=${IMAGE_VARIANT:-unset}"
 
@@ -30,4 +30,4 @@ echo "   IMAGE_VARIANT=${IMAGE_VARIANT:-unset}"
 # Step 5: Compile schemas, update caches, clean up
 "${SCRIPT_DIR}/finalize.sh"
 
-echo ":: DefenestraOS build complete."
+echo ":: defenestraOS build complete."

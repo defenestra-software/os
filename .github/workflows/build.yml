@@ -59,12 +59,12 @@ jobs:
 
           # Derive pretty name for image metadata
           case "$TARGET" in
-            defenestraos)                      PRETTY="DefenestraOS" ;;
-            defenestraos-nvidia)               PRETTY="DefenestraOS NVIDIA" ;;
-            defenestraos-nvidia-open)          PRETTY="DefenestraOS NVIDIA Open" ;;
-            defenestraos-handheld)             PRETTY="DefenestraOS Handheld" ;;
-            defenestraos-handheld-nvidia)      PRETTY="DefenestraOS Handheld NVIDIA" ;;
-            defenestraos-handheld-nvidia-open) PRETTY="DefenestraOS Handheld NVIDIA Open" ;;
+            defenestraos)                      PRETTY="defenestraOS" ;;
+            defenestraos-nvidia)               PRETTY="defenestraOS NVIDIA" ;;
+            defenestraos-nvidia-open)          PRETTY="defenestraOS NVIDIA Open" ;;
+            defenestraos-handheld)             PRETTY="defenestraOS Handheld" ;;
+            defenestraos-handheld-nvidia)      PRETTY="defenestraOS Handheld NVIDIA" ;;
+            defenestraos-handheld-nvidia-open) PRETTY="defenestraOS Handheld NVIDIA Open" ;;
           esac
           echo "VERSION_PRETTY=${PRETTY}" >> ${GITHUB_ENV}
 

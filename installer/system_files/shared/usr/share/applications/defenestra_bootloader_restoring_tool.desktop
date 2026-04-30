@@ -2,7 +2,7 @@
 [Desktop Entry]
 Type=Application
 Icon=tools-wizard-symbolic
-Name=DefenestraOS Bootloader Restoring Tool
+Name=defenestraOS Bootloader Restoring Tool
 Comment=Restore the bootloader if it has been overwritten by Windows
 Keywords=bootloader;fix;grub;windows
 Categories=System;Utility

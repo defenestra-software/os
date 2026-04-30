@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# DefenestraOS Live ISO builder
-# Takes built DefenestraOS image, adds live session + Anaconda installer
+# defenestraOS Live ISO builder
+# Takes built defenestraOS image, adds live session + Anaconda installer
 # Run with --cap-add sys_admin --security-opt label=disable
 
 ARG BASE_IMAGE=${BASE_IMAGE:-localhost/defenestraos:latest}
