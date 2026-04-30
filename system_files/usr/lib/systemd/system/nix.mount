@@ -1,0 +1,15 @@
+[Unit]
+Description=Nix store bind mount
+DefaultDependencies=no
+Before=local-fs.target nix-daemon.service nix-daemon.socket
+After=var.mount
+ConditionPathIsDirectory=/var/nix
+
+[Mount]
+What=/var/nix
+Where=/nix
+Type=none
+Options=bind
+
+[Install]
+WantedBy=local-fs.target
