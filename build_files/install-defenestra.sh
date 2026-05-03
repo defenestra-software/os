@@ -223,6 +223,11 @@ dnf5 -y remove glib2-devel
 
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
+# Mirror Nix profile XDG entries into /usr/local/share + ~/.local/share so
+# GNOME Shell shows newly installed apps live, no relog. User unit enabled
+# via /usr/lib/systemd/user-preset/90-defenestra.preset on first session.
+systemctl enable defenestra-nix-xdg-sync.path 2>/dev/null || true
+systemctl --global enable defenestra-nix-xdg-sync.path 2>/dev/null || true
 
 # Docker: socket-activated, daemon starts on first use.
 systemctl enable docker.socket 2>/dev/null || true

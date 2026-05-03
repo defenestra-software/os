@@ -1,0 +1,77 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Mirror Nix profile XDG entries (.desktop, icons) into a directory that
+# GNOME Shell already monitors at session start, so apps installed via
+# `nix profile add` appear in the app grid without a session relog.
+#
+#   --user    mirror per-user profiles into ~/.local/share/{applications,icons}
+#   --system  mirror system profiles into /usr/local/share/{applications,icons}
+#
+# Profiles auto-discovered:
+#   user:   $XDG_STATE_HOME/nix/profiles/* and /nix/var/nix/profiles/per-user/$USER/*
+#   system: /nix/var/nix/profiles/*  (excluding per-user/ and *-link generations)
+#
+# Idempotent. Cleans stale links pointing into /nix/store before re-linking.
+
+set -euo pipefail
+
+MODE="${1:-}"
+case "$MODE" in
+    --user)
+        DST="${XDG_DATA_HOME:-$HOME/.local/share}"
+        SOURCES=()
+        STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/nix/profiles"
+        if [ -d "$STATE_DIR" ]; then
+            while IFS= read -r p; do SOURCES+=("$p"); done < <(
+                find "$STATE_DIR" -maxdepth 1 -mindepth 1 -type l ! -name '*-link' 2>/dev/null
+            )
+        fi
+        PER_USER="/nix/var/nix/profiles/per-user/${USER:-$(id -un)}"
+        if [ -d "$PER_USER" ]; then
+            while IFS= read -r p; do SOURCES+=("$p"); done < <(
+                find "$PER_USER" -maxdepth 1 -mindepth 1 -type l ! -name '*-link' 2>/dev/null
+            )
+        fi
+        ;;
+    --system)
+        DST="/usr/local/share"
+        SOURCES=()
+        if [ -d /nix/var/nix/profiles ]; then
+            while IFS= read -r p; do SOURCES+=("$p"); done < <(
+                find /nix/var/nix/profiles -maxdepth 1 -mindepth 1 -type l ! -name '*-link' 2>/dev/null
+            )
+        fi
+        ;;
+    *)
+        echo "usage: $0 --user|--system" >&2
+        exit 2
+        ;;
+esac
+
+mkdir -p "$DST/applications" "$DST/icons"
+
+# Drop stale links from prior runs (anything pointing into /nix/store or /nix/var).
+find "$DST/applications" -maxdepth 1 -type l \
+    \( -lname '/nix/*' -o -lname '*/.nix-profile/*' \) -delete 2>/dev/null || true
+find "$DST/icons" -maxdepth 1 -type l \
+    \( -lname '/nix/*' -o -lname '*/.nix-profile/*' \) -delete 2>/dev/null || true
+
+for profile in "${SOURCES[@]}"; do
+    share="$profile/share"
+    [ -d "$share" ] || continue
+
+    if [ -d "$share/applications" ]; then
+        find "$share/applications" -maxdepth 1 -name '*.desktop' \
+            -exec ln -sf {} "$DST/applications/" \; 2>/dev/null || true
+    fi
+    if [ -d "$share/icons" ]; then
+        find "$share/icons" -maxdepth 1 -mindepth 1 \
+            -exec ln -sfn {} "$DST/icons/" \; 2>/dev/null || true
+    fi
+done
+
+update-desktop-database -q "$DST/applications" 2>/dev/null || true
+if [ -d "$DST/icons/hicolor" ]; then
+    gtk-update-icon-cache -t -f "$DST/icons/hicolor" 2>/dev/null || true
+fi
