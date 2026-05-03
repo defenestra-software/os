@@ -1,0 +1,10 @@
+[Unit]
+# SPDX-License-Identifier: GPL-3.0-or-later
+Description=Mirror Nix system profile XDG entries into /usr/local/share
+After=nix.mount
+RequiresMountsFor=/nix
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-nix-xdg-sync --system
+Nice=10

@@ -1,0 +1,12 @@
+[Unit]
+# SPDX-License-Identifier: GPL-3.0-or-later
+Description=Watch Nix user profiles for XDG changes
+
+[Path]
+PathChanged=%h/.local/state/nix/profiles
+PathChanged=%h/.nix-profile
+TriggerLimitIntervalSec=2s
+TriggerLimitBurst=5
+
+[Install]
+WantedBy=default.target

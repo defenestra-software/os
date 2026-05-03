@@ -1,0 +1,13 @@
+[Unit]
+# SPDX-License-Identifier: GPL-3.0-or-later
+Description=Watch Nix system profiles for XDG changes
+After=nix.mount
+RequiresMountsFor=/nix
+
+[Path]
+PathChanged=/nix/var/nix/profiles
+TriggerLimitIntervalSec=2s
+TriggerLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
