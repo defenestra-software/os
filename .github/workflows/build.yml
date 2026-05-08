@@ -76,12 +76,62 @@ jobs:
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
 
+      # On scheduled runs, skip the build if the upstream Bazzite base image
+      # hasn't changed since our last published image. Manual push and PR runs
+      # always build (they mean we intentional changed something).
+      - name: Check base image freshness
+        id: freshness
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          case "${{ matrix.target }}" in
+            defenestraos)                 BASE="ghcr.io/ublue-os/bazzite-gnome:stable" ;;
+            defenestraos-nvidia)          BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia:stable" ;;
+            defenestraos-nvidia-open)     BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia-open:stable" ;;
+            defenestraos-handheld)        BASE="ghcr.io/ublue-os/bazzite-deck-gnome:stable" ;;
+            defenestraos-handheld-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
+            defenestraos-handheld-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
+          esac
+
+          NEW=$(skopeo inspect --format '{{.Digest}}' "docker://${BASE}")
+          OLD=$(skopeo inspect "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:latest" 2>/dev/null \
+            | jq -r '.Labels["org.defenestra.base.digest"] // empty' || true)
+
+          echo "base=${BASE}" >> "$GITHUB_OUTPUT"
+          echo "base_digest=${NEW}" >> "$GITHUB_OUTPUT"
+          if [ -n "$OLD" ] && [ "$NEW" = "$OLD" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Base image unchanged ($NEW); skipping scheduled rebuild."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Base changed (was: ${OLD:-<none>}, now: ${NEW}); building."
+          fi
+
+      - name: Stamp base digest for future freshness checks
+        if: steps.freshness.outputs.skip != 'true'
+        run: |
+          # Re-read the digest so push/PR/manual runs (which skipped the
+          # freshness step) also stamp the label.
+          case "${{ matrix.target }}" in
+            defenestraos)                 BASE="ghcr.io/ublue-os/bazzite-gnome:stable" ;;
+            defenestraos-nvidia)          BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia:stable" ;;
+            defenestraos-nvidia-open)     BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia-open:stable" ;;
+            defenestraos-handheld)        BASE="ghcr.io/ublue-os/bazzite-deck-gnome:stable" ;;
+            defenestraos-handheld-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
+            defenestraos-handheld-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
+          esac
+          echo "BASE_DIGEST=$(skopeo inspect --format '{{.Digest}}' docker://${BASE})" >> "$GITHUB_ENV"
+
       - name: Get current date
+        if: steps.freshness.outputs.skip != 'true'
         id: date
         run: |
           echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
 
       - name: Image Metadata
+        if: steps.freshness.outputs.skip != 'true'
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         id: metadata
         with:
@@ -103,11 +153,13 @@ jobs:
             io.artifacthub.package.license=Apache-2.0
             io.artifacthub.package.prerelease=false
             containers.bootc=1
+            org.defenestra.base.digest=${{ env.BASE_DIGEST }}
           sep-tags: " "
           sep-annotations: " "
 
       # Login before build so buildah can pull base images from GHCR
       - name: Login to GitHub Container Registry
+        if: steps.freshness.outputs.skip != 'true'
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
@@ -115,6 +167,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Image
+        if: steps.freshness.outputs.skip != 'true'
         id: build_image
         run: |
           sudo buildah build \
@@ -132,7 +185,7 @@ jobs:
           done
 
       - name: Push To GHCR
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: steps.freshness.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | sudo podman login ghcr.io -u ${{ github.actor }} --password-stdin
           for tag in ${{ steps.metadata.outputs.tags }}; do
@@ -141,12 +194,12 @@ jobs:
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: steps.freshness.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         with:
           cosign-release: 'v2.6.1'
 
       - name: Sign container image
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: steps.freshness.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
           IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
           for tag in ${{ steps.metadata.outputs.tags }}; do
