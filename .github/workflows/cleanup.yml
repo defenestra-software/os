@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+---
+name: Prune old container images
+
+on:
+  schedule:
+    - cron: '30 6 * * 0'  # Sundays at 06:30 UTC
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  prune:
+    name: Delete images older than 90 days
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Prune untagged + stale dated tags
+        uses: snok/container-retention-policy@v3
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: >-
+            defenestraos
+            defenestraos-nvidia
+            defenestraos-nvidia-open
+            defenestraos-handheld
+          cut-off: 90d
+          image-tags: '!latest !stable'
+          tag-selection: 'both'
