@@ -28,7 +28,8 @@ dnf5 -y install \
     gnome-shell-extension-dash-to-panel \
     gnome-shell-extension-dash-to-dock \
     gnome-shell-extension-places-menu \
-    gnome-shell-extension-light-style
+    gnome-shell-extension-light-style \
+    gnome-shell-extension-drive-menu
 # TODO: Build these packages
 # dnf5 -y install defenestra-welcome
 # dnf5 -y install defenestra-store
@@ -211,7 +212,53 @@ if [ -d "${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com" ]; then
     glib-compile-schemas "${ARCMENU_DST}/schemas"
 fi
 
+# Desktop Icons NG (DING) - root layout, compile schemas
+if [ -d "${BUNDLED_EXT_SRC}/ding@rastersoft.com" ]; then
+    DING_SRC="${BUNDLED_EXT_SRC}/ding@rastersoft.com"
+    DING_DST="${BUNDLED_EXT_DST}/ding@rastersoft.com"
+    mkdir -p "${DING_DST}"
+    rsync -a \
+        --exclude='.git' --exclude='debian' --exclude='meson.build' \
+        --exclude='meson_post_install.py' --exclude='*.sh' --exclude='kill.py' \
+        --exclude='HISTORY.md' --exclude='README.md' --exclude='apparmor' \
+        "${DING_SRC}/" "${DING_DST}/"
+    glib-compile-schemas "${DING_DST}/schemas"
+fi
+
+# Tiling Assistant - extension lives in same-named subdir
+if [ -d "${BUNDLED_EXT_SRC}/tiling-assistant@leleat-on-github/tiling-assistant@leleat-on-github" ]; then
+    TA_SRC="${BUNDLED_EXT_SRC}/tiling-assistant@leleat-on-github/tiling-assistant@leleat-on-github"
+    TA_DST="${BUNDLED_EXT_DST}/tiling-assistant@leleat-on-github"
+    mkdir -p "${TA_DST}"
+    cp -r "${TA_SRC}"/. "${TA_DST}/"
+    glib-compile-schemas "${TA_DST}/schemas"
+fi
+
+# Alphabetical App Grid - extension lives in extension/ subdir
+if [ -d "${BUNDLED_EXT_SRC}/AlphabeticalAppGrid@stuarthayhurst/extension" ]; then
+    AAG_SRC="${BUNDLED_EXT_SRC}/AlphabeticalAppGrid@stuarthayhurst/extension"
+    AAG_DST="${BUNDLED_EXT_DST}/AlphabeticalAppGrid@stuarthayhurst"
+    mkdir -p "${AAG_DST}"
+    cp -r "${AAG_SRC}"/. "${AAG_DST}/"
+    glib-compile-schemas "${AAG_DST}/schemas"
+fi
+
 dnf5 -y remove glib2-devel
+
+# Tiling Shell - prebuilt zip from upstream releases (TypeScript/esbuild
+# build output, ships compiled gschemas + gresource + .mo). Avoids pulling
+# nodejs/npm into the image build.
+command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
+TILINGSHELL_VERSION="17.3"
+TILINGSHELL_SHA256="63ab8230b62c1a888d5af40e47aef0676e5e99ac367e35f51a797fe3b9a79370"
+TILINGSHELL_URL="https://github.com/domferr/tilingshell/releases/download/${TILINGSHELL_VERSION}/tilingshell%40ferrarodomenico.com.zip"
+TILINGSHELL_DST="${BUNDLED_EXT_DST}/tilingshell@ferrarodomenico.com"
+TILINGSHELL_TMP="$(mktemp -d)"
+curl -fsSL -o "${TILINGSHELL_TMP}/ts.zip" "${TILINGSHELL_URL}"
+echo "${TILINGSHELL_SHA256}  ${TILINGSHELL_TMP}/ts.zip" | sha256sum -c -
+mkdir -p "${TILINGSHELL_DST}"
+unzip -q -o "${TILINGSHELL_TMP}/ts.zip" -d "${TILINGSHELL_DST}"
+rm -rf "${TILINGSHELL_TMP}"
 
 # -----------------------------------------------------------------------------
 # Re-enable renamed services
