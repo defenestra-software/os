@@ -21,7 +21,7 @@ dnf5 -y copr enable defenestra/defenestra
 # defenestra-branding ships defenestra-specific icons that don't collide with
 # fedora-logos paths.
 dnf5 -y upgrade --refresh fedora-logos
-dnf5 -y install --refresh defenestra-branding defenestra-arsenal
+dnf5 -y install --refresh defenestra-branding defenestra-arsenal defenestra-chassis
 
 # GNOME extensions not in bazzite base
 dnf5 -y install \
