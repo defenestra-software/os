@@ -1,0 +1,7 @@
+{
+  "uuid": "show-logout@defenestra.io",
+  "name": "Show Logout",
+  "description": "Force the Log Out entry visible in the quick settings system menu.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "url": "https://defenestra.io"
+}
