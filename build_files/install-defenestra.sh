@@ -189,6 +189,16 @@ BUNDLED_EXT_DST="/usr/share/gnome-shell/extensions"
 
 dnf5 -y install glib2-devel
 
+# No Startup Overview: defenestra in-tree, JS only, no schemas
+if [ -d "${BUNDLED_EXT_SRC}/no-startup-overview@defenestra.io" ]; then
+    cp -r "${BUNDLED_EXT_SRC}/no-startup-overview@defenestra.io" "${BUNDLED_EXT_DST}/"
+fi
+
+# Show Logout: defenestra in-tree, JS only, no schemas
+if [ -d "${BUNDLED_EXT_SRC}/show-logout@defenestra.io" ]; then
+    cp -r "${BUNDLED_EXT_SRC}/show-logout@defenestra.io" "${BUNDLED_EXT_DST}/"
+fi
+
 # Clipboard Indicator - straightforward copy
 if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
     cp -r "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" "${BUNDLED_EXT_DST}/"
