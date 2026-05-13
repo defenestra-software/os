@@ -12,16 +12,13 @@ set -ouex pipefail
 echo ":: Installing defenestraOS packages..."
 
 # -----------------------------------------------------------------------------
-# defenestraOS COPR packages (when available)
+# defenestraOS COPR packages
 # -----------------------------------------------------------------------------
-
 dnf5 -y copr enable defenestra/defenestra
-# fedora-logos is a defenestra fork (42.0.1-200.defenestra) that replaces the
-# upstream 42.0.1-2.fc43 - ships our pixmap/favicon/plymouth overrides baked in.
-# defenestra-branding ships defenestra-specific icons that don't collide with
-# fedora-logos paths.
-dnf5 -y upgrade --refresh fedora-logos
-dnf5 -y install --refresh defenestra-branding defenestra-arsenal defenestra-chassis
+dnf5 -y install --refresh defenestra-arsenal defenestra-chassis
+# TODO: Build these packages
+# dnf5 -y install defenestra-store
+dnf5 -y copr disable defenestra/defenestra
 
 # GNOME extensions not in bazzite base
 dnf5 -y install \
@@ -30,17 +27,12 @@ dnf5 -y install \
     gnome-shell-extension-places-menu \
     gnome-shell-extension-light-style \
     gnome-shell-extension-drive-menu
-# TODO: Build these packages
-# dnf5 -y install defenestra-welcome
-# dnf5 -y install defenestra-store
-dnf5 -y copr disable defenestra/defenestra
 
-# gnome-initial-setup - bazzite doesn't include it (uses their own portal).
-# We stripped bazzite-portal, so we need this for first-boot user creation.
+# gnome-initial-setup - We need this for user setup and OEM installations
 dnf5 -y install gnome-initial-setup
 
 # Additional shells. bash stays default, fish inherited from bazzite.
-# zsh = popular alternative. nushell available via nix (`nix profile install nixpkgs#nushell`).
+# zsh = popular alternative.
 dnf5 -y install zsh
 
 # Homebrew: tarball already at /usr/share/homebrew.tar.zst (inherited from
