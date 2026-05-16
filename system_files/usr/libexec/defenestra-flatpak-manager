@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Script version - bump VER to force re-run on update
-VER=2
+VER=3
 SCRIPT_HASH=$(tr -d '[:space:]' <"$0" | sha256sum | cut -d ' ' -f 1)
 VER="$VER-$SCRIPT_HASH"
 VER_FILE="/etc/defenestra/flatpak_manager_version"
@@ -41,6 +41,13 @@ fi
 flatpak override \
     --filesystem=xdg-config/gtk-4.0:ro \
     --filesystem=xdg-config/gtk-3.0:ro
+
+# Read-only access to host nix store + fontconfig so flatpaks see nix-installed
+# fonts/icons/cursors (system /etc/fonts/conf.d already lists nix profile dirs).
+flatpak override \
+    --system \
+    --filesystem=/nix/store:ro \
+    --filesystem=xdg-config/fontconfig:ro
 
 # XInput for Firefox
 flatpak override \
