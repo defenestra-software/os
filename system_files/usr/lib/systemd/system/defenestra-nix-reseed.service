@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Seed /var/nix from image factory (covers rebase upgrades)
+DefaultDependencies=no
+After=var.mount systemd-tmpfiles-setup.service
+Before=nix.mount nix-daemon.service nix-daemon.socket sysinit.target
+RequiresMountsFor=/var
+ConditionPathExists=/usr/share/factory/var/nix
+ConditionPathExists=!/var/lib/defenestra/.nix-store-seeded
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/mkdir -p /var/lib/defenestra /var/nix
+ExecStart=/usr/bin/sh -c '\
+    if [ ! -d /var/nix/store ] || [ -z "$(ls -A /var/nix/store 2>/dev/null)" ]; then \
+        cp -a /usr/share/factory/var/nix/. /var/nix/; \
+    fi'
+ExecStartPost=/usr/bin/touch /var/lib/defenestra/.nix-store-seeded
+
+[Install]
+WantedBy=sysinit.target

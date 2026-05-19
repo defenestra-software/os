@@ -94,7 +94,7 @@ sudoif command *args:
 # Examples:
 #   just build                              # builds defenestraos (AMD/Intel desktop)
 #   just build defenestraos-nvidia           # builds NVIDIA closed desktop
-#   just build defenestraos-handheld         # builds handheld AMD/Intel
+# just build defenestraos-handheld         # builds handheld AMD/Intel
 build $target=image_name $tag=default_tag:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -398,7 +398,6 @@ spawn-vm rebuild="0" type="qcow2" ram="6G":
       --network-user-mode \
       --vsock=false --pass-ssh-key=false \
       -i ./output/**/*.{{ type }}
-
 
 # Runs shell check on all Bash scripts
 lint:

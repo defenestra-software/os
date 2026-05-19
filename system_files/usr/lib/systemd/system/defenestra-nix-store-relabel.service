@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Relabel the Nix store for SELinux (first boot after seeding)
+DefaultDependencies=no
+After=nix.mount local-fs.target
+Before=nix-daemon.service nix-daemon.socket sysinit.target
+RequiresMountsFor=/nix
+ConditionPathExists=!/var/lib/defenestra/.nix-store-relabeled
+ConditionSecurity=selinux
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/mkdir -p /var/lib/defenestra
+ExecStart=/usr/sbin/restorecon -RF /nix
+ExecStartPost=/usr/bin/touch /var/lib/defenestra/.nix-store-relabeled
+
+[Install]
+WantedBy=sysinit.target

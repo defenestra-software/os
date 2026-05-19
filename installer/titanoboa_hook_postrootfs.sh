@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # defenestraOS post-rootfs hook for live ISO
-# Installs Anaconda, configures live session, sets up installer kickstart
 
 set -exo pipefail
 
 source /etc/os-release
 
 # Clear versionlocks so Anaconda can install (needs stock NetworkManager)
-# The live session doesn't need bazzite-patched packages - the installed
-# system gets them from the embedded OS image, not the live environment.
 dnf -y versionlock clear
 
 # Install Anaconda and dependencies
@@ -17,9 +14,6 @@ dnf install -y --enable-repo=fedora-cisco-openh264 --allowerasing \
     firefox anaconda-live libblockdev-{btrfs,lvm,dm}
 
 # Branding for the live session
-# Don't replace fedora-logos - anaconda-webui depends on it directly.
-# Our branding RPM is already in the base OS image (which gets installed).
-# For the live ISO, just overlay our logos into the pixmaps fedora-logos owns.
 cp -f /usr/share/icons/hicolor/scalable/places/defenestra-logo.svg \
     /usr/share/pixmaps/fedora-gdm-logo.png 2>/dev/null || true
 for f in fedora-logo.png fedora-logo-small.png fedora_logo_med.png \
@@ -43,7 +37,6 @@ mkdir -p /var/lib/rpm-state
 # Utilities for dialogs
 dnf install -qy --setopt=install_weak_deps=0 qrencode yad
 
-# Variables
 # Find the OS image (not the live-payload)
 imageref="$(podman images --format '{{ index .Names 0 }}\n' 'defenestra*' | grep -v 'live-payload' | head -1)"
 imageref="${imageref##*://}"
@@ -228,10 +221,9 @@ fi
 
 # Re-enable nouveau for live session (nvidia images)
 if [[ $imageref == *-nvidia* ]]; then
-    for pkg in nvidia-gpu-firmware mesa-vulkan-drivers; do
-        dnf -yq reinstall --allowerasing $pkg ||
-            dnf -yq install --allowerasing $pkg
-    done
+    dnf -yq install --allowerasing nvidia-gpu-firmware || :
+    dnf -yq --repo='fedora*,updates*' distro-sync --allowerasing mesa-vulkan-drivers \
+        || dnf -yq downgrade --allowerasing mesa-vulkan-drivers
     (
         shopt -u nullglob
         ls /usr/share/vulkan/icd.d/nouveau_icd.*.json >/dev/null

@@ -2,8 +2,9 @@
 [Unit]
 Description=Nix store bind mount
 DefaultDependencies=no
-Before=local-fs.target nix-daemon.service nix-daemon.socket
-After=var.mount
+After=var.mount systemd-tmpfiles-setup.service
+Before=sysinit.target nix-daemon.service nix-daemon.socket
+RequiresMountsFor=/var
 ConditionPathIsDirectory=/var/nix
 
 [Mount]
@@ -13,4 +14,4 @@ Type=none
 Options=bind
 
 [Install]
-WantedBy=local-fs.target
+WantedBy=sysinit.target
