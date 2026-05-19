@@ -76,10 +76,10 @@ echo iptable_nat > /etc/modules-load.d/defenestra-docker.conf
 # Nix package manager - F44 ships official RPMs.
 # nix-daemon sub-package provides systemd units (multi-user mode).
 # /var/nix holds the store; bound onto /nix via nix.mount unit at boot.
-# Seed /var/nix from RPM-shipped /nix so bind mount doesn't hide store/db.
+
 dnf5 -y install nix nix-daemon
-mkdir -p /var/nix
-cp -a /nix/. /var/nix/
+mkdir -p /usr/share/factory/var/nix
+cp -a /nix/. /usr/share/factory/var/nix/
 rm -rf /nix/*
 
 # SELinux: Fedora ships no policy for /nix paths. Use Determinate Systems'
@@ -90,7 +90,11 @@ rm -rf /nix/*
 # Source .te/.fc shipped alongside .pp for audit.
 # Load from /ctx (build context bind) since system_files overlay runs later.
 semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
-restorecon -RF /var/nix
+# Relabel the factory-staged store. nix.fc rules are keyed on /nix paths, so
+# the authoritative store relabel happens on first boot once /var/nix is
+# bind-mounted at /nix (see defenestra-nix-store-relabel.service). This
+# build-time pass just clears RPM-inherited contexts on the factory copy.
+restorecon -RF /usr/share/factory/var/nix
 
 # Enterprise / network authentication & file sharing
 # Bazzite is gaming-focused and ships minimal enterprise support.
@@ -270,7 +274,9 @@ rm -rf "${TILINGSHELL_TMP}"
 # We re-enable them here under their new names.
 # -----------------------------------------------------------------------------
 
+systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
+systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
 # Mirror Nix profile XDG entries into /usr/local/share + ~/.local/share so
 # GNOME Shell shows newly installed apps live, no relog. User unit enabled
