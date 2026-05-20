@@ -45,18 +45,64 @@ dnf5 -y install zsh
 # services so our defenestra-brew-* units own the lifecycle as `linuxbrew`.
 # Upstream /etc/profile.d/brew.sh stays, it correctly sets PATH so
 # brew-installed binaries work for all users.
+# This works by actually making a system user the owner of brew
+# and running all installs as that user `linuxbrew`
 systemd-sysusers /ctx/system_files/usr/lib/sysusers.d/defenestra-linuxbrew.conf
 systemctl mask brew-setup.service brew-update.service brew-update.timer \
     brew-upgrade.service brew-upgrade.timer 2>/dev/null || true
 
-# Container tooling: toolbox (Fedora's, "Toolbx") complements distrobox
-# (already in bazzite). distrobox = arch/deb/rpm/snap user containers,
-# toolbox = Fedora-only seamless dev container. Both available, user picks.
+# Container toolbox
 dnf5 -y install toolbox
 
-# Docker CE from upstream Docker Inc. Pattern from bazzite-dx: repo added
-# but disabled, install with --enable-repo for this transaction only.
-# Socket-activated: zero runtime cost until first `docker` invocation.
+# AMD GPU compute stack. Bazzite ships mesa-libOpenCL (Rusticl/Clover) which
+# conflicts with ROCm's OpenCL ICD - remove first, then install ROCm.
+# --setopt=install_weak_deps=False keeps the footprint to compute libs only,
+# no test/debug recommends.
+dnf5 -y remove mesa-libOpenCL
+dnf5 -y --setopt=install_weak_deps=False install \
+    rocm-hip \
+    rocm-opencl \
+    rocm-clinfo \
+    rocm-smi
+
+# Low-level dev/tracing tools
+dnf5 -y install \
+    bpftrace \
+    bcc \
+    flatpak-builder \
+    waypipe \
+    git-subtree \
+    iotop \
+    trace-cmd
+
+# Incus + agent. Bazzite already ships lxc; incus is the actively-maintained
+# fork of LXD that drives modern system container management. Pair completes
+# the lxc stack already present.
+dnf5 -y install \
+    incus \
+    incus-agent
+
+# sys tray libraries
+dnf5 -y install \
+    libappindicator-gtk3 \
+    libayatana-appindicator-gtk3
+
+# Cockpit web admin
+dnf5 -y install \
+    cockpit \
+    cockpit-ostree
+
+# Fonts.
+dnf5 -y install \
+    adwaita-fonts-all \
+    jetbrains-mono-fonts-all \
+    opendyslexic-fonts \
+    google-roboto-fonts \
+    google-roboto-condensed-fonts \
+    google-roboto-mono-fonts \
+    google-roboto-slab-fonts
+
+# Docker CE from upstream Docker
 docker_pkgs=(
     containerd.io
     docker-buildx-plugin
@@ -96,21 +142,7 @@ semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
 # build-time pass just clears RPM-inherited contexts on the factory copy.
 restorecon -RF /usr/share/factory/var/nix
 
-# Enterprise / network authentication & file sharing
-# Bazzite is gaming-focused and ships minimal enterprise support.
-# Bluefin is workstation-focused and ships a partial AD/Samba stack.
-# We add the FULL enterprise stack - gaming from Bazzite, enterprise from us.
-# Enables GNOME Initial Setup "Enterprise Login" page (requires realmd).
-# See: https://github.com/ublue-os/main/issues/1378
-#
-# SSSD meta-package pulls: sssd-ad, sssd-ipa, sssd-krb5, sssd-ldap, sssd-proxy
-# This covers AD, FreeIPA, Kerberos, LDAP, and legacy proxy - any enterprise
-# directory a user might encounter just works.
-#
-# Base Fedora Atomic already includes: sssd-common, sssd-client, sssd-kcm,
-# sssd-krb5-common, krb5-libs, cyrus-sasl-gssapi, nfs-utils, gssproxy,
-# samba-client, samba-client-libs, samba-common, cifs-utils, and all gvfs
-# backends (gvfs-smb, gvfs-nfs, gvfs-fuse, gvfs-goa). We don't re-add those.
+# Enterprise features from Bluefin
 dnf5 -y install \
     sssd \
     sssd-dbus \
