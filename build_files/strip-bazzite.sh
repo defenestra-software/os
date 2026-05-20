@@ -19,6 +19,7 @@ echo ":: Stripping bazzite branding and onboarding..."
 # Verified against live bazzite 43.20260403.0 (Silverblue)
 dnf5 remove -y --noautoremove bazaar           # Bazzite app store
 dnf5 remove -y --noautoremove bazzite-portal   # Bazzite welcome/portal app
+dnf5 remove -y --noautoremove webapp-manager   # PWAs handled by defenestra store
 
 # -----------------------------------------------------------------------------
 # Branding assets
