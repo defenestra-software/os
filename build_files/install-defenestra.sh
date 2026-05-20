@@ -92,6 +92,16 @@ dnf5 -y install \
     cockpit \
     cockpit-ostree
 
+# Security opt-ins install but none enabled
+# this allows the user or company to enable-based on policy.
+dnf5 -y install \
+    usbguard \
+    usbguard-notifier \
+    pam-u2f \
+    pamu2fcfg \
+    yubikey-manager \
+    fscrypt
+
 # Fonts.
 dnf5 -y install \
     adwaita-fonts-all \
