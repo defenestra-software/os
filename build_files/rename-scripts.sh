@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
-# =============================================================================
-# Rename bazzite-* scripts, services, and configs → defenestra-*
-#
-# This renames files AND updates internal references so everything still works.
-# =============================================================================
-
 echo ":: Renaming bazzite scripts to defenestra..."
-
-# -----------------------------------------------------------------------------
-# Helper: rename a file and update all references in known locations
-# -----------------------------------------------------------------------------
 
 rename_file() {
     local old="$1"
@@ -24,10 +14,7 @@ rename_file() {
     fi
 }
 
-# -----------------------------------------------------------------------------
-# Scripts - /usr/libexec/
-# -----------------------------------------------------------------------------
-
+# /usr/libexec
 rename_file /usr/libexec/bazzite-user-setup           /usr/libexec/defenestra-user-setup
 rename_file /usr/libexec/bazzite-privileged-user-setup /usr/libexec/defenestra-privileged-user-setup
 rename_file /usr/libexec/bazzite-hardware-setup        /usr/libexec/defenestra-hardware-setup
@@ -43,29 +30,22 @@ rename_file /usr/libexec/bazzite_detect_nvidia_support_status /usr/libexec/defen
 rename_file /usr/libexec/bazzite-tdpfix                /usr/libexec/defenestra-tdpfix
 rename_file /usr/libexec/bazzite-autologin             /usr/libexec/defenestra-autologin
 
-# -----------------------------------------------------------------------------
-# Scripts - /usr/bin/
-# -----------------------------------------------------------------------------
-
+# /usr/bin
 rename_file /usr/bin/bazzite-steam                     /usr/bin/defenestra-steam
 rename_file /usr/bin/bazzite-steam-bpm                 /usr/bin/defenestra-steam-bpm
 rename_file /usr/bin/bazzite-steam-brand               /usr/bin/defenestra-steam-brand
 rename_file /usr/bin/bazzite-rollback-helper            /usr/bin/defenestra-rollback-helper
 rename_file /usr/bin/bazzite-desktop-bootstrap         /usr/bin/defenestra-desktop-bootstrap
 
-# Steam-brand: guard against missing videos (commissioned later)
-# bazzite-steam-brand was just renamed → defenestra-steam-brand. Inject early-exit
-# if /usr/share/defenestra/steam-videos/ doesn't exist yet.
+# Branding videos arrive later. Inject early-exit so steam-brand is a no-op
+# until /usr/share/defenestra/steam-videos/ is populated.
 if [ -f /usr/bin/defenestra-steam-brand ]; then
     sed -i '2a\
 # defenestraOS: skip until startup/suspend videos are commissioned\
 [ -d /usr/share/defenestra/steam-videos ] || exit 0' /usr/bin/defenestra-steam-brand
 fi
 
-# -----------------------------------------------------------------------------
-# Systemd services
-# -----------------------------------------------------------------------------
-
+# systemd units
 rename_file /usr/lib/systemd/system/bazzite-hardware-setup.service   /usr/lib/systemd/system/defenestra-hardware-setup.service
 rename_file /usr/lib/systemd/system/bazzite-flatpak-manager.service  /usr/lib/systemd/system/defenestra-flatpak-manager.service
 rename_file /usr/lib/systemd/system/bazzite-libvirtd-setup.service   /usr/lib/systemd/system/defenestra-libvirtd-setup.service
@@ -75,10 +55,7 @@ rename_file /usr/lib/systemd/user/bazzite-user-setup.service         /usr/lib/sy
 rename_file /usr/lib/systemd/system/bazzite-tdpfix.service           /usr/lib/systemd/system/defenestra-tdpfix.service
 rename_file /usr/lib/systemd/system/bazzite-autologin.service        /usr/lib/systemd/system/defenestra-autologin.service
 
-# -----------------------------------------------------------------------------
-# Polkit policies
-# -----------------------------------------------------------------------------
-
+# polkit policies
 rename_file /usr/share/polkit-1/actions/org.bazzite.privileged.user.setup.policy \
             /usr/share/polkit-1/actions/org.defenestra.privileged.user.setup.policy
 rename_file /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
@@ -90,10 +67,7 @@ rename_file /usr/share/polkit-1/actions/org.bazzite.rebase.policy \
 rename_file /usr/share/polkit-1/rules.d/bazzite-autologin.rules \
             /usr/share/polkit-1/rules.d/defenestra-autologin.rules
 
-# -----------------------------------------------------------------------------
-# Just recipes
-# -----------------------------------------------------------------------------
-
+# just recipes
 for f in /usr/share/ublue-os/just/*bazzite*.just; do
     [ -f "$f" ] || continue
     newname="${f//bazzite/defenestra}"
@@ -101,41 +75,23 @@ for f in /usr/share/ublue-os/just/*bazzite*.just; do
     echo "  Renamed: $(basename "$f") → $(basename "$newname")"
 done
 
-# -----------------------------------------------------------------------------
-# Firefox configs
-# -----------------------------------------------------------------------------
-
+# firefox configs
 rename_file /usr/share/ublue-os/firefox-config/01-bazzite-global.js  /usr/share/ublue-os/firefox-config/01-defenestra-global.js
 rename_file /usr/share/ublue-os/firefox-config/02-bazzite-nvidia.js  /usr/share/ublue-os/firefox-config/02-defenestra-nvidia.js
 rename_file /usr/share/ublue-os/firefox-config/03-bazzite-gnome.js   /usr/share/ublue-os/firefox-config/03-defenestra-gnome.js
 
-# -----------------------------------------------------------------------------
-# Profile scripts
-# -----------------------------------------------------------------------------
-
+# profile scripts
 rename_file /etc/profile.d/bazzite-neofetch.sh /etc/profile.d/defenestra-fastfetch.sh
-
-# Fish
 rename_file /usr/share/fish/vendor_conf.d/bazzite-neofetch.fish /usr/share/fish/vendor_conf.d/defenestra-fastfetch.fish
 
-# -----------------------------------------------------------------------------
-# Desktop files
-# -----------------------------------------------------------------------------
-
+# desktop files
 rename_file /usr/share/applications/bazzite-steam-bpm.desktop /usr/share/applications/defenestra-steam-bpm.desktop
-# Handheld
 rename_file /etc/xdg/autostart/bazzite-desktop-bootstrap.desktop /etc/xdg/autostart/defenestra-desktop-bootstrap.desktop
 
-# -----------------------------------------------------------------------------
-# Homebrew config
-# -----------------------------------------------------------------------------
-
+# homebrew config
 rename_file /usr/share/ublue-os/homebrew/bazzite-cli.Brewfile /usr/share/ublue-os/homebrew/defenestra-cli.Brewfile
 
-# -----------------------------------------------------------------------------
-# dconf database files
-# -----------------------------------------------------------------------------
-
+# dconf database
 for f in /etc/dconf/db/distro.d/*bazzite*; do
     [ -f "$f" ] || continue
     newname="${f//bazzite/defenestra}"
@@ -150,10 +106,7 @@ for f in /etc/dconf/db/distro.d/locks/*bazzite*; do
     echo "  Renamed: $(basename "$f") → $(basename "$newname")"
 done
 
-# -----------------------------------------------------------------------------
-# Tuned profiles (optional - cosmetic rename)
-# -----------------------------------------------------------------------------
-
+# tuned profiles (cosmetic rename)
 for d in /usr/lib/tuned/profiles/*-bazzite*; do
     [ -d "$d" ] || continue
     newname="${d//bazzite/defenestra}"
@@ -161,13 +114,8 @@ for d in /usr/lib/tuned/profiles/*-bazzite*; do
     echo "  Renamed: $(basename "$d") → $(basename "$newname")"
 done
 
-# -----------------------------------------------------------------------------
-# Bulk sed: update internal references in all renamed files
-#
-# This catches ExecStart= paths, script cross-references, action IDs, etc.
-# We target specific directories to avoid touching binary files.
-# -----------------------------------------------------------------------------
-
+# Targeted sed across known dirs only (avoids binary files in /usr/bin).
+# Catches ExecStart= paths, cross-references, polkit action IDs, etc.
 echo ":: Updating internal references (bazzite → defenestra)..."
 
 sed_dirs=(
@@ -223,7 +171,6 @@ for dir in "${sed_dirs[@]}"; do
             {} +
 done
 
-# Update polkit XML content (vendor name, URLs)
 for f in /usr/share/polkit-1/actions/org.defenestra.*.policy; do
     [ -f "$f" ] || continue
     sed -i \
