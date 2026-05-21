@@ -1,18 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# =============================================================================
-# defenestraOS Container Build
 #
-# Based on Bazzite images; inherits gaming kernel, drivers, and gaming stack.
-# We strip bazzite branding/onboarding and overlay defenestra identity.
-#
-# Targets (select with --target):
-#   defenestraos                      - desktop, AMD/Intel
-#   defenestraos-nvidia               - desktop, NVIDIA closed (GTX 10xx+)
-#   defenestraos-nvidia-open          - desktop, NVIDIA open (RTX 20xx+)
-#   defenestraos-handheld             - handheld/deck, AMD/Intel
-#   defenestraos-handheld-nvidia      - handheld/deck, NVIDIA closed
-#   defenestraos-handheld-nvidia-open - handheld/deck, NVIDIA open
-# =============================================================================
+# Targets (--target):
+#   defenestraos                      desktop, AMD/Intel
+#   defenestraos-nvidia               desktop, NVIDIA closed (GTX 10xx+)
+#   defenestraos-nvidia-open          desktop, NVIDIA open (RTX 20xx+)
+#   defenestraos-handheld             handheld/deck, AMD/Intel
+#   defenestraos-handheld-nvidia      handheld/deck, NVIDIA closed
+#   defenestraos-handheld-nvidia-open handheld/deck, NVIDIA open
 
 ARG BASE_TAG="${BASE_TAG:-stable}"
 
@@ -23,17 +17,12 @@ ARG BASE_HANDHELD="${BASE_HANDHELD:-ghcr.io/ublue-os/bazzite-deck-gnome:${BASE_T
 ARG BASE_HANDHELD_NVIDIA="${BASE_HANDHELD_NVIDIA:-ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:${BASE_TAG}}"
 ARG BASE_HANDHELD_NVIDIA_OPEN="${BASE_HANDHELD_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:${BASE_TAG}}"
 
-# Build context. Homebrew tarball already lives in base image at
-# /usr/share/homebrew.tar.zst (Bazzite chain inherits it from uBlue main).
-# We mask upstream brew-* services in install-defenestra.sh and run our
-# own defenestra-brew-setup.service that extracts as the linuxbrew system user.
+# Homebrew tarball lives at /usr/share/homebrew.tar.zst in the base (uBlue main
+# inherited by Bazzite). install-defenestra.sh masks upstream brew-* units and
+# runs defenestra-brew-setup as the linuxbrew system user.
 FROM scratch AS ctx
 COPY build_files /build_files
 COPY system_files /system_files
-
-# =============================================================================
-# DESKTOP - AMD/Intel
-# =============================================================================
 
 FROM ${BASE_DESKTOP} AS defenestraos
 
@@ -58,10 +47,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
-# =============================================================================
-# DESKTOP - NVIDIA closed
-# =============================================================================
-
 FROM ${BASE_DESKTOP_NVIDIA} AS defenestraos-nvidia
 
 ARG IMAGE_NAME="defenestraos-nvidia"
@@ -84,10 +69,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build_files/build.sh
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
-
-# =============================================================================
-# DESKTOP - NVIDIA open
-# =============================================================================
 
 FROM ${BASE_DESKTOP_NVIDIA_OPEN} AS defenestraos-nvidia-open
 
@@ -112,10 +93,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
-# =============================================================================
-# HANDHELD - AMD/Intel
-# =============================================================================
-
 FROM ${BASE_HANDHELD} AS defenestraos-handheld
 
 ARG IMAGE_NAME="defenestraos-handheld"
@@ -139,10 +116,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
-# =============================================================================
-# HANDHELD - NVIDIA closed
-# =============================================================================
-
 FROM ${BASE_HANDHELD_NVIDIA} AS defenestraos-handheld-nvidia
 
 ARG IMAGE_NAME="defenestraos-handheld-nvidia"
@@ -165,10 +138,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build_files/build.sh
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
-
-# =============================================================================
-# HANDHELD - NVIDIA open
-# =============================================================================
 
 FROM ${BASE_HANDHELD_NVIDIA_OPEN} AS defenestraos-handheld-nvidia-open
 

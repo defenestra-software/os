@@ -112,8 +112,8 @@ jobs:
       - name: Stamp base digest for future freshness checks
         if: steps.freshness.outputs.skip != 'true'
         run: |
-          # Re-read the digest so push/PR/manual runs (which skipped the
-          # freshness step) also stamp the label.
+          # Push/PR/manual runs skip the freshness step, so re-read here to
+          # ensure every published image gets the label.
           case "${{ matrix.target }}" in
             defenestraos)                 BASE="ghcr.io/ublue-os/bazzite-gnome:stable" ;;
             defenestraos-nvidia)          BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia:stable" ;;

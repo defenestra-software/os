@@ -6,14 +6,12 @@ set -exo pipefail
 
 source /etc/os-release
 
-# Clear versionlocks so Anaconda can install (needs stock NetworkManager)
+# Anaconda needs stock NetworkManager, which versionlock pins back.
 dnf -y versionlock clear
 
-# Install Anaconda and dependencies
 dnf install -y --enable-repo=fedora-cisco-openh264 --allowerasing \
     firefox anaconda-live libblockdev-{btrfs,lvm,dm}
 
-# Branding for the live session
 cp -f /usr/share/icons/hicolor/scalable/places/defenestra-logo.svg \
     /usr/share/pixmaps/fedora-gdm-logo.png 2>/dev/null || true
 for f in fedora-logo.png fedora-logo-small.png fedora_logo_med.png \
@@ -24,7 +22,7 @@ for f in fedora-logo.png fedora-logo-small.png fedora_logo_med.png \
     fi
 done
 
-# Reinstall extensions that --allowerasing may have removed
+# --allowerasing above may pull extensions; restore.
 dnf -y install \
     gnome-shell-extension-dash-to-panel \
     gnome-shell-extension-dash-to-dock \
@@ -34,10 +32,8 @@ dnf -y install \
 
 mkdir -p /var/lib/rpm-state
 
-# Utilities for dialogs
 dnf install -qy --setopt=install_weak_deps=0 qrencode yad
 
-# Find the OS image (not the live-payload)
 imageref="$(podman images --format '{{ index .Names 0 }}\n' 'defenestra*' | grep -v 'live-payload' | head -1)"
 imageref="${imageref##*://}"
 imageref="${imageref%%:*}"
@@ -50,13 +46,11 @@ SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
 
 echo "defenestraOS release $VERSION_ID" >/etc/system-release
 
-# Anaconda installer branding (sidebar, header, CSS)
 if [ -d /src/branding ]; then
     mkdir -p /usr/share/anaconda/pixmaps/silverblue
     cp -r /src/branding/* /usr/share/anaconda/pixmaps/
 fi
 
-# Installer icon - use defenestra logo
 for f in \
     /usr/share/icons/hicolor/48x48/apps/org.fedoraproject.AnacondaInstaller.svg \
     /usr/share/icons/hicolor/scalable/apps/org.fedoraproject.AnacondaInstaller.svg; do
@@ -65,11 +59,9 @@ for f in \
     fi
 done
 
-# Secureboot Key Fetch
 mkdir -p /usr/share/ublue-os
 curl -Lo /usr/share/ublue-os/sb_pubkey.der "$sbkey"
 
-# Default Kickstart
 cat <<EOF >>/usr/share/anaconda/interactive-defaults.ks
 
 # Create log directory
@@ -182,9 +174,6 @@ echo -e "\$ENROLLMENT_PASSWORD\n\$ENROLLMENT_PASSWORD" | mokutil --import "\$SEC
 %end
 EOF
 
-### Live session tweaks ###
-
-# Disable services not needed in live session
 (
     set +e
     for s in \
@@ -212,14 +201,14 @@ EOF
     done
 )
 
-# Use GSK_RENDERER=gl for nvidia (workaround for GTK apps not opening)
+# GTK apps fail to open on nvidia without GSK_RENDERER=gl in live session.
 if [[ $imageref == *-nvidia* ]]; then
     mkdir -p /etc/environment.d /etc/skel/.config/environment.d
     echo "GSK_RENDERER=gl" >>/etc/environment.d/99-nvidia-fix.conf
     echo "GSK_RENDERER=gl" >>/etc/skel/.config/environment.d/99-nvidia-fix.conf
 fi
 
-# Re-enable nouveau for live session (nvidia images)
+# Live session uses nouveau (proprietary driver init too risky pre-install).
 if [[ $imageref == *-nvidia* ]]; then
     dnf -yq install --allowerasing nvidia-gpu-firmware || :
     dnf -yq --repo='fedora*,updates*' distro-sync --allowerasing mesa-vulkan-drivers \
@@ -233,26 +222,20 @@ if [[ $imageref == *-nvidia* ]]; then
     }
 fi
 
-# Don't start Steam at login in live session
 rm -vf /etc/skel/.config/autostart/steam*.desktop
 
-# Remove packages not needed in live session
 dnf -yq remove steam lutris bazaar || :
 
-# Don't start fedora-welcome
 sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/anaconda/gnome/org.fedoraproject.welcome-screen.desktop || :
 
-# Copy live session system files
 echo "Copying shared system files..."
 cp -af /src/system_files/shared/. /
 
 echo "Copying GNOME-specific system files..."
 cp -af /src/system_files/gnome/. / 2>/dev/null || true
 
-# Compile schemas for live session overrides
 glib-compile-schemas /usr/share/glib-2.0/schemas
 
-# Install gparted for disk management
 dnf -yq install gparted
 
 dnf clean all
