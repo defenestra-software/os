@@ -4,7 +4,7 @@ Description=Watch Nix user profiles for XDG changes
 
 [Path]
 PathChanged=%h/.local/state/nix/profiles
-PathChanged=%h/.nix-profile
+PathChanged=/nix/var/nix/profiles/per-user/%u
 TriggerLimitIntervalSec=2s
 TriggerLimitBurst=5
 
