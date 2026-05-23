@@ -16,4 +16,7 @@ if [ -d /nix/var/nix/profiles/default ]; then
         *) XDG_DATA_DIRS="${HOME}/.nix-profile/share:/nix/var/nix/profiles/default/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" ;;
     esac
     export XDG_DATA_DIRS
+
+    # Allow unfree packages by default
+    export NIXPKGS_ALLOW_UNFREE=1
 fi

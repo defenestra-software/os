@@ -94,7 +94,7 @@ echo iptable_nat > /etc/modules-load.d/defenestra-docker.conf
 
 # F44 nix-daemon ships multi-user systemd units. /var/nix holds the store;
 # bound onto /nix via nix.mount at boot.
-dnf5 -y install nix nix-daemon
+dnf5 -y install nix nix-daemon busybox
 mkdir -p /usr/share/factory/var/nix
 cp -a /nix/. /usr/share/factory/var/nix/
 rm -rf /nix/*
