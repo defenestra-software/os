@@ -6,6 +6,7 @@ RequiresMountsFor=/nix
 
 [Path]
 PathChanged=/nix/var/nix/profiles
+PathChanged=/nix/var/nix/profiles/per-user/root
 TriggerLimitIntervalSec=2s
 TriggerLimitBurst=5
 
