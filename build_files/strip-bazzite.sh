@@ -26,6 +26,17 @@ rm -f /usr/bin/bruh
 
 rm -rf /usr/share/ublue-os/bazaar/
 
+# Bazzite-only wallpaper branding. ublue.png/ublue.xml kept (base lineage).
+# Steam Deck branding dropped to avoid potential Valve trademark/copyright issue.
+dnf5 remove -y --noautoremove steamdeck-backgrounds
+rm -rf /usr/share/backgrounds/steamdeck/
+rm -rf /usr/share/backgrounds/convergence /usr/share/backgrounds/convergence.jxl /usr/share/backgrounds/convergence-dynamic.xml
+rm -f /usr/share/backgrounds/giants.jxl
+rm -f /usr/share/backgrounds/default.jxl /usr/share/backgrounds/default-dark.jxl
+rm -f /usr/share/gnome-background-properties/convergence.xml \
+      /usr/share/gnome-background-properties/convergence-dynamic.xml \
+      /usr/share/gnome-background-properties/VGUI2.xml
+
 rm -rf /usr/share/ublue-os/motd/
 rm -f /usr/libexec/ublue-motd
 rm -f /etc/profile.d/user-motd.sh
