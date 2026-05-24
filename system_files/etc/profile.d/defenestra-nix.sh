@@ -20,3 +20,14 @@ if [ -d /nix/var/nix/profiles/default ]; then
     # Allow unfree packages by default
     export NIXPKGS_ALLOW_UNFREE=1
 fi
+
+# Surface host Mesa/Vulkan/NVIDIA userspace to nix-built GPU apps. The dir
+# is curated (GPU drivers + direct deps only), so prepending it to
+# LD_LIBRARY_PATH cannot shadow libc/libssl/libstdc++/etc. in nix processes.
+if [ -d /run/opengl-driver/lib ]; then
+    case ":${LD_LIBRARY_PATH:-}:" in
+        *":/run/opengl-driver/lib:"*) ;;
+        *) LD_LIBRARY_PATH="/run/opengl-driver/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+    esac
+    export LD_LIBRARY_PATH
+fi

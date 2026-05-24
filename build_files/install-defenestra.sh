@@ -241,6 +241,9 @@ mkdir -p "${TILINGSHELL_DST}"
 unzip -q -o "${TILINGSHELL_TMP}/ts.zip" -d "${TILINGSHELL_DST}"
 rm -rf "${TILINGSHELL_TMP}"
 
+# Build the curated /run/opengl-driver/{lib,lib32} backing directory
+/ctx/build_files/curate-gl-libs.sh
+
 systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
