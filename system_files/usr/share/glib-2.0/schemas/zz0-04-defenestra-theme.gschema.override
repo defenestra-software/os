@@ -20,15 +20,15 @@ theme-name='steam'
 [org.gnome.desktop.background]
 color-shading-type='solid'
 picture-options='zoom'
-picture-uri='file:///usr/share/backgrounds/step_through-4k.png'
-picture-uri-dark='file:///usr/share/backgrounds/step_through-4k.png'
+picture-uri='file:///usr/share/backgrounds/defenestra/step_through-4k.png'
+picture-uri-dark='file:///usr/share/backgrounds/defenestra/step_through-4k.png'
 primary-color='#64748b'
 secondary-color='#1a1a2e'
 
 [org.gnome.desktop.screensaver]
 color-shading-type='solid'
 picture-options='zoom'
-picture-uri='file:///usr/share/backgrounds/step_through-4k.png'
+picture-uri='file:///usr/share/backgrounds/defenestra/step_through-4k.png'
 primary-color='#64748b'
 secondary-color='#1a1a2e'
 
