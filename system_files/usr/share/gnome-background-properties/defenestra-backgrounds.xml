@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>Step Through</name>
+    <filename>/usr/share/backgrounds/step_through-4k.png</filename>
+    <filename-dark>/usr/share/backgrounds/step_through-4k.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#64748b</pcolor>
+    <scolor>#1a1a2e</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Brand Stripes</name>
+    <filename>/usr/share/backgrounds/brand_stripes.svg</filename>
+    <filename-dark>/usr/share/backgrounds/brand_stripes.svg</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#64748b</pcolor>
+    <scolor>#1a1a2e</scolor>
+  </wallpaper>
+</wallpapers>
