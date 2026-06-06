@@ -78,7 +78,7 @@ jobs:
 
       # On scheduled runs, skip the build if the upstream Bazzite base image
       # hasn't changed since our last published image. Manual push and PR runs
-      # always build (they mean we intentional changed something).
+      # always build (they mean we intentionally changed something).
       - name: Check base image freshness
         id: freshness
         if: github.event_name == 'schedule'
@@ -150,7 +150,7 @@ jobs:
             org.opencontainers.image.version=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
             io.artifacthub.package.deprecated=false
             io.artifacthub.package.keywords=${{ env.IMAGE_KEYWORDS }}
-            io.artifacthub.package.license=Apache-2.0
+            io.artifacthub.package.license=GPL-3.0-or-later
             io.artifacthub.package.prerelease=false
             containers.bootc=1
             org.defenestra.base.digest=${{ env.BASE_DIGEST }}

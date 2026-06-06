@@ -2,4 +2,7 @@
 # Wheel members can run brew as the linuxbrew system user without password.
 # Non-admin users can still run brew-installed *binaries* (jq, htop, etc.)
 # from PATH, just not invoke `brew` itself to install/upgrade.
-%wheel ALL=(linuxbrew) NOPASSWD: /var/home/linuxbrew/.linuxbrew/bin/brew
+# SETENV lets the wrapper set XDG_RUNTIME_DIR so `brew services` can reach the
+# linuxbrew user's systemd --user instance (kept alive via linger). The command
+# stays pinned to the brew binary, so this widens env only, not what may run.
+%wheel ALL=(linuxbrew) NOPASSWD:SETENV: /var/home/linuxbrew/.linuxbrew/bin/brew

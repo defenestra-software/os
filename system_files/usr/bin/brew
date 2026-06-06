@@ -10,4 +10,11 @@
 cd /var/home/linuxbrew || cd /
 # -H sets HOME to linuxbrew's home so brew caches/taps/state land in the
 # shared prefix instead of the caller's home.
-exec sudo -H -u linuxbrew /var/home/linuxbrew/.linuxbrew/bin/brew "$@"
+#
+# XDG_RUNTIME_DIR points brew at the linuxbrew user's systemd --user instance
+# (kept alive across boot via /var/lib/systemd/linger/linuxbrew, created by
+# tmpfiles). Without it `brew services` can't reach a user bus and no-ops.
+# Set inline (allowed by SETENV in sudoers); harmless for non-services commands.
+# Computed from the live uid since sysusers allocates it dynamically.
+exec sudo -H -u linuxbrew "XDG_RUNTIME_DIR=/run/user/$(id -u linuxbrew)" \
+    /var/home/linuxbrew/.linuxbrew/bin/brew "$@"
