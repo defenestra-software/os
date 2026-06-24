@@ -67,13 +67,6 @@ rename_file /usr/share/polkit-1/actions/org.bazzite.rebase.policy \
 rename_file /usr/share/polkit-1/rules.d/bazzite-autologin.rules \
             /usr/share/polkit-1/rules.d/defenestra-autologin.rules
 
-# just recipes
-for f in /usr/share/ublue-os/just/*bazzite*.just; do
-    [ -f "$f" ] || continue
-    newname="${f//bazzite/defenestra}"
-    mv "$f" "$newname"
-    echo "  Renamed: $(basename "$f") → $(basename "$newname")"
-done
 
 # firefox configs
 rename_file /usr/share/ublue-os/firefox-config/01-bazzite-global.js  /usr/share/ublue-os/firefox-config/01-defenestra-global.js
