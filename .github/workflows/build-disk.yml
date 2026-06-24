@@ -21,11 +21,10 @@ on:
       - main
     paths:
       - './disk_config/disk.toml'
-      - './disk_config/iso.toml'
       - './.github/workflows/build-disk.yml'
 
 env:
-  IMAGE_NAME: ${{ github.event.repository.name }} # output of build.yml, keep in sync
+  # IMAGE_NAME is set per variant in the build job (see strategy.matrix).
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
   BIB_IMAGE: "quay.io/centos-bootc/bootc-image-builder:latest"
@@ -41,7 +40,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        disk-type: ["qcow2", "anaconda-iso"]
+        # Must match the published image names in build.yml. Live installer ISOs
+        # come from build-iso.yml (Titanoboa); this workflow builds VM images.
+        image:
+          - defenestraos
+          - defenestraos-nvidia
+          - defenestraos-nvidia-open
+          - defenestraos-handheld
+        disk-type: ["qcow2"]
     permissions:
       contents: read
       packages: read
@@ -52,6 +58,7 @@ jobs:
         run: |
           USER_UID=$(id -u)
           USER_GID=$(id -g)
+          IMAGE_NAME="${{ matrix.image }}"
           DISK_TYPE=$(echo "${{ matrix.disk-type }}" | tr ' ' '-')
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
@@ -81,7 +88,7 @@ jobs:
         uses: osbuild/bootc-image-builder-action@main
         with:
           builder-image: ${{ env.BIB_IMAGE }}
-          config-file: ${{ matrix.disk-type == 'anaconda-iso' && './disk_config/iso.toml' || './disk_config/disk.toml' }}
+          config-file: ./disk_config/disk.toml
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: ${{ matrix.disk-type }}

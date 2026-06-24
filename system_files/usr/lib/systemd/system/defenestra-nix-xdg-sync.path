@@ -1,5 +1,5 @@
-[Unit]
 # SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
 Description=Watch Nix system profiles for XDG changes
 After=nix.mount
 RequiresMountsFor=/nix

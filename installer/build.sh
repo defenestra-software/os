@@ -53,7 +53,7 @@ dnf install -y grub2-efi-x64-cdboot
 mkdir -p /boot/efi
 cp -av /usr/lib/efi/*/*/EFI /boot/efi/
 
-# Remove fallback efi
+# Point the EFI fallback loader at the signed grub binary
 cp -v /boot/efi/EFI/fedora/grubx64.efi /boot/efi/EFI/BOOT/fbx64.efi
 
 # Set the timezone to UTC
@@ -95,5 +95,4 @@ systemctl enable var-lib-flatpak.mount
 mkdir -p /usr/lib/bootc-image-builder
 cp /src/iso.yaml /usr/lib/bootc-image-builder/iso.yaml
 
-# Clean up dnf cache to save space
 dnf clean all

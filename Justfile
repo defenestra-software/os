@@ -117,7 +117,6 @@ build-live-iso $target=image_name $tag=default_tag: (_rootful_load_image target 
 
     echo "=== Building live ISO payload for ${target} ==="
 
-    # Step 1: Build the payload container
     # Mount host container storage so the build can load the OS image
     # --no-cache because installer scripts change frequently during development
     sudo podman build \
@@ -131,13 +130,11 @@ build-live-iso $target=image_name $tag=default_tag: (_rootful_load_image target 
         -t "$PAYLOAD_TAG" \
         installer/
 
-    # Step 2: Clone Titanoboa if not present
     if [[ ! -d .titanoboa ]]; then
         echo "=== Cloning Titanoboa ==="
         git clone -b revamp-pr https://github.com/Zeglius/titanoboa.git .titanoboa
     fi
 
-    # Step 3: Generate ISO via Titanoboa
     echo "=== Generating live ISO via Titanoboa ==="
     mkdir -p output
     sudo TITANOBOA_CTR_IMAGE="$PAYLOAD_TAG" \
@@ -162,13 +159,11 @@ _rootful_load_image $target_image=image_name $tag=default_tag:
     #!/usr/bin/bash
     set -eoux pipefail
 
-    # Check if already running as root or under sudo
     if [[ -n "${SUDO_USER:-}" || "${UID}" -eq "0" ]]; then
         echo "Already root or running under sudo, no need to load image from user podman."
         exit 0
     fi
 
-    # Try to resolve the image tag using podman inspect
     set +e
     resolved_tag=$(podman inspect -t image "${target_image}:${tag}" | jq -r '.[].RepoTags.[0]')
     return_code=$?
@@ -231,10 +226,6 @@ build-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_bui
 [group('Build Virtual Machine Image')]
 build-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-bib target_image tag "raw" "disk_config/disk.toml")
 
-# Build an ISO virtual machine image
-[group('Build Virtual Machine Image')]
-build-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-bib target_image tag "iso" "disk_config/iso.toml")
-
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtual Machine Image')]
 rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "qcow2" "disk_config/disk.toml")
@@ -243,22 +234,13 @@ rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_r
 [group('Build Virtual Machine Image')]
 rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "raw" "disk_config/disk.toml")
 
-# Rebuild an ISO virtual machine image
-[group('Build Virtual Machine Image')]
-rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "iso" "disk_config/iso.toml")
-
 # Run a virtual machine with the specified image type and configuration
 _run-vm $target_image $tag $type $config:
     #!/usr/bin/bash
     set -eoux pipefail
 
-    # Determine the image file based on the type
     image_file="output/${type}/disk.${type}"
-    if [[ $type == iso ]]; then
-        image_file="output/bootiso/install.iso"
-    fi
 
-    # Build the image if it does not exist
     if [[ ! -f "${image_file}" ]]; then
         just "build-${type}" "$target_image" "$tag"
     fi
@@ -271,7 +253,6 @@ _run-vm $target_image $tag $type $config:
     echo "Using Port: ${port}"
     echo "Connect to http://localhost:${port}"
 
-    # Set up the arguments for running the VM
     run_args=()
     run_args+=(--rm --privileged)
     run_args+=(--pull=newer)
@@ -285,7 +266,6 @@ _run-vm $target_image $tag $type $config:
     run_args+=(--volume "${PWD}/${image_file}":"/boot.${type}")
     run_args+=(docker.io/qemux/qemu)
 
-    # Run the VM and open the browser to connect
     (sleep 30 && xdg-open http://localhost:"$port") &
     podman run "${run_args[@]}"
 
@@ -296,10 +276,6 @@ run-vm-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_ru
 # Run a virtual machine from a RAW image
 [group('Run Virtual Machine')]
 run-vm-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "raw" "disk_config/disk.toml")
-
-# Run a virtual machine from an ISO
-[group('Run Virtual Machine')]
-run-vm-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "iso" "disk_config/iso.toml")
 
 # Run a virtual machine from the Titanoboa live ISO
 [group('Run Virtual Machine')]
@@ -355,22 +331,18 @@ spawn-vm rebuild="0" type="qcow2" ram="6G":
 lint:
     #!/usr/bin/env bash
     set -eoux pipefail
-    # Check if shellcheck is installed
     if ! command -v shellcheck &> /dev/null; then
         echo "shellcheck could not be found. Please install it."
         exit 1
     fi
-    # Run shellcheck on all Bash scripts
     /usr/bin/find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
 
 # Runs shfmt on all Bash scripts
 format:
     #!/usr/bin/env bash
     set -eoux pipefail
-    # Check if shfmt is installed
     if ! command -v shfmt &> /dev/null; then
-        echo "shellcheck could not be found. Please install it."
+        echo "shfmt could not be found. Please install it."
         exit 1
     fi
-    # Run shfmt on all Bash scripts
     /usr/bin/find . -iname "*.sh" -type f -exec shfmt --write "{}" ';'

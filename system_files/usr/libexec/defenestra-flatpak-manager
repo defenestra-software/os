@@ -8,7 +8,7 @@ VER="$VER-$SCRIPT_HASH"
 VER_FILE="/etc/defenestra/flatpak_manager_version"
 VER_RAN=$(cat "$VER_FILE" 2>/dev/null)
 IMAGE_NAME_FILE="/etc/defenestra/flatpak_manager_image_name"
-IMAGE_NAME=$(cat /etc/os-release | grep "^VARIANT_ID=" | cut -d= -f2)
+IMAGE_NAME=$(grep "^VARIANT_ID=" /etc/os-release | cut -d= -f2)
 KNOWN_IMAGE_NAME=$(cat "$IMAGE_NAME_FILE" 2>/dev/null)
 
 # Run script if updated or image changed

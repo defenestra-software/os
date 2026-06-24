@@ -2,10 +2,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -ouex pipefail
 
-# =============================================================================
-# defenestraOS - stamp OS identity into image
-# =============================================================================
-
 IMAGE_NAME="${IMAGE_NAME:-defenestraos}"
 IMAGE_VENDOR="${IMAGE_VENDOR:-defenestra}"
 IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
@@ -14,10 +10,6 @@ VERSION_TAG="${VERSION_TAG:-$(date +%Y%m%d)}"
 VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS}"
 
 echo ":: Writing OS identity: ${IMAGE_NAME} (${IMAGE_VARIANT})"
-
-# -----------------------------------------------------------------------------
-# /usr/lib/os-release
-# -----------------------------------------------------------------------------
 
 cat > /usr/lib/os-release <<EOF
 NAME="defenestraOS"
@@ -30,7 +22,7 @@ VARIANT_ID=${IMAGE_VARIANT}
 HOME_URL="https://defenestra.io"
 DOCUMENTATION_URL="https://docs.defenestra.io"
 SUPPORT_URL="https://defenestra.io/support"
-BUG_REPORT_URL="https://github.com/defenestra/os/issues"
+BUG_REPORT_URL="https://github.com/defenestra-software/os/issues"
 LOGO=defenestra-logo-icon
 DEFAULT_HOSTNAME="${IMAGE_NAME}"
 CPE_NAME="cpe:/o:defenestra:defenestraos:$(rpm -E %fedora)"
@@ -38,10 +30,6 @@ EOF
 
 # Symlink (some tools read /etc/os-release)
 ln -sf /usr/lib/os-release /etc/os-release
-
-# -----------------------------------------------------------------------------
-# /usr/share/ublue-os/image-info.json
-# -----------------------------------------------------------------------------
 
 mkdir -p /usr/share/ublue-os
 
