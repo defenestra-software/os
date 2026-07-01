@@ -5,7 +5,7 @@ set -ouex pipefail
 echo ":: Installing defenestraOS packages..."
 
 dnf5 -y copr enable defenestra/defenestra
-dnf5 -y install --refresh defenestra-arsenal defenestra-chassis
+dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd
 dnf5 -y copr disable defenestra/defenestra
 
 dnf5 -y install \
@@ -248,6 +248,8 @@ systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
+# NSS bridge: lets Nix-built binaries resolve host sssd/FreeIPA identities.
+systemctl enable nsncd.service 2>/dev/null || true
 # xdg-sync mirrors Nix profile entries into XDG dirs so GNOME Shell shows new
 # apps without relog. User unit lit via systemd/user-preset/90-defenestra.preset.
 systemctl enable defenestra-nix-xdg-sync.path 2>/dev/null || true
