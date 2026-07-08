@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Compose /run/opengl-driver (host GL + Nix Mesa hybrid)
+After=nix.mount systemd-tmpfiles-setup.service
+RequiresMountsFor=/nix /var
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-opengl-compose
+
+[Install]
+WantedBy=sysinit.target

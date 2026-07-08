@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Fetch a Nix-built Mesa so nix GL/Vulkan apps get a driver built against the nix
+# channel's glibc.
+
+set -euo pipefail
+
+dest=/var/lib/defenestra/opengl
+mkdir -p "$dest"
+
+# Pin to the nixpkgs rev captured at image build (opengl-nixpkgs-rev) so every
+# machine off an image gets the identical Mesa
+rev="$(cat /usr/share/defenestra/opengl-nixpkgs-rev 2>/dev/null || true)"
+ref="nixpkgs"
+[ -n "$rev" ] && ref="github:NixOS/nixpkgs/$rev"
+
+# Skip when already provisioned
+if [ -e "$dest/mesa/lib" ] && [ -e "$dest/mesa32/lib" ] \
+   && { [ -z "$rev" ] || [ "$rev" = "$(cat "$dest/.rev" 2>/dev/null || true)" ]; }; then
+    exit 0
+fi
+
+# libgbm is a separate output; i686 covers 32-bit nix GL apps
+# as they hardcode /run/opengl-driver-32.
+nixflags=(--refresh --extra-experimental-features 'nix-command flakes')
+nix build "${nixflags[@]}" --out-link "$dest/mesa"   "$ref#mesa"
+nix build "${nixflags[@]}" --out-link "$dest/gbm"    "$ref#libgbm"
+nix build "${nixflags[@]}" --out-link "$dest/mesa32" "$ref#pkgsi686Linux.mesa"
+nix build "${nixflags[@]}" --out-link "$dest/gbm32"  "$ref#pkgsi686Linux.libgbm"
+
+printf '%s\n' "$rev" > "$dest/.rev"
+
+# Recompose /run against the freshly-fetched Mesa without waiting for next boot.
+systemctl start defenestra-opengl-compose.service

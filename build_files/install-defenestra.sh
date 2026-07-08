@@ -244,6 +244,13 @@ rm -rf "${TILINGSHELL_TMP}"
 # Build the curated /run/opengl-driver/{lib,lib32} backing directory
 /ctx/build_files/curate-gl-libs.sh
 
+# Pin the nixpkgs rev that defenestra-opengl-provision fetches Mesa from, so every
+# machine off this image gets the identical, image-tested Mesa instead of whatever
+# unstable happens to be on its first-boot day.
+mkdir -p /usr/share/defenestra
+curl -fsSL https://channels.nixos.org/nixpkgs-unstable/git-revision \
+    > /usr/share/defenestra/opengl-nixpkgs-rev
+
 systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
@@ -254,6 +261,11 @@ systemctl enable nsncd.service 2>/dev/null || true
 # apps without relog. User unit lit via systemd/user-preset/90-defenestra.preset.
 systemctl enable defenestra-nix-xdg-sync.path 2>/dev/null || true
 systemctl --global enable defenestra-nix-xdg-sync.path 2>/dev/null || true
+# Hybrid GL: first-boot fetch of a nix-built Mesa (glibc-consistent) and
+# per-boot compose for /run/opengl-driver so nix GL/Vulkan apps stop
+# breaking when Fedora's glibc outpaces the nix channel's. NVIDIA stays host.
+systemctl enable defenestra-opengl-provision.service 2>/dev/null || true
+systemctl enable defenestra-opengl-compose.service 2>/dev/null || true
 
 systemctl enable docker.socket 2>/dev/null || true
 

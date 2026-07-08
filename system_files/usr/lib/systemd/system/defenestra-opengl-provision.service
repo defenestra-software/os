@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Provision Nix Mesa for hybrid GL/Vulkan
+Wants=network-online.target nix-daemon.service
+After=network-online.target nix-daemon.service nix.mount defenestra-nix-reseed.service
+RequiresMountsFor=/nix /var
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/defenestra-opengl-provision
+
+[Install]
+WantedBy=multi-user.target
