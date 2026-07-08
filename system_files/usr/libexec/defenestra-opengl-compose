@@ -1,88 +1,43 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Compose /run/opengl-driver{,-32} from the host-curated GL set plus a Nix-built
-# Mesa. nix-built GL/Vulkan apps then render on a glibc-consistent Mesa while
-# NVIDIA and the rest of the host GPU userspace stay host-sourced
-# Runs at every boot and again from provision's ExecStartPost the
-# instant the first-boot fetch happens so it takes effect without a reboot.
+# Make nix-built GL apps use a glibc-consistent Nix Mesa, without breaking the host GL.
+
 
 set -euo pipefail
 shopt -s nullglob
 
-mesa_libs=(
-    'libEGL_mesa.so*' 'libGLX_mesa.so*' 'libgallium-*.so'
-    'libvulkan_*.so' 'libglapi.so*' 'libgbm.so*'
-)
-
-have() { [ -n "${1:-}" ] && [ -d "$1/lib" ]; }
 link() { [ -e "$1" ] && ln -sfn "$1" "$2/$(basename "$1")"; return 0; }
-
 
 swap() {
     local final="$1" target="$2" tmp
     tmp="$(dirname "$final")/.swap.$$.$(basename "$final")"
     ln -sfn "$target" "$tmp"
+    [ -e "$final" ] && [ ! -L "$final" ] && rm -rf "$final"
     mv -T "$tmp" "$final"
 }
 
 compose_arch() {
-    local root="$1" host_lib="$2" mesa_root="$3" gbm_root="$4"
+    local root="$1" mesa_root="$2"
     [ -d "$root" ] || return 0
-    local mesa gbm pat f j d
+    local mesa j d
     mesa="$(readlink -f "$mesa_root" 2>/dev/null || true)"
-    gbm="$(readlink -f "$gbm_root" 2>/dev/null || true)"
+    { [ -n "$mesa" ] && [ -d "$mesa/lib" ]; } || return 0
 
-    # lib: host-curated fallback (NVIDIA, VA-API, libdrm, GLVND, host Mesa),
-    # then Nix Mesa + its split-out gbm shadowing the host Mesa basenames.
-    local lib_gen="$root/lib.$$"
-    rm -rf "$lib_gen"; mkdir -p "$lib_gen"
-    for f in "$host_lib"/*; do link "$f" "$lib_gen"; done
-    for src in "$mesa" "$gbm"; do
-        have "$src" || continue
-        for pat in "${mesa_libs[@]}"; do
-            for f in "$src/lib/"$pat; do link "$f" "$lib_gen"; done
-        done
-    done
-    swap "$root/lib" "lib.$$"
-
-    # EGL vendor: prefer Nix Mesa's descriptor and uses the absolute path
-    # so nix libglvnd, which searches this dir before /usr/share/glvnd,
-    # binds Nix Mesa without depending on bare-soname resolution.
     mkdir -p "$root/share/glvnd"
-    local egl_gen="$root/share/glvnd/egl_vendor.d.$$"
-    rm -rf "$egl_gen"; mkdir -p "$egl_gen"
-    if have "$mesa"; then
-        for j in "$mesa"/share/glvnd/egl_vendor.d/*.json; do link "$j" "$egl_gen"; done
-    fi
+    local gen="$root/share/glvnd/egl_vendor.d.$$"
+    rm -rf "$gen"; mkdir -p "$gen"
+    for j in "$mesa"/share/glvnd/egl_vendor.d/*.json; do link "$j" "$gen"; done
     swap "$root/share/glvnd/egl_vendor.d" "egl_vendor.d.$$"
 
-    # Vulkan: manifests carry absolute library paths, so lib-shadowing does
-    # nothing here. Keep every host ICD plus the host layers, then let the Nix
-    # Mesa manifests override the host Mesa ones by basename
-    # (radeon_icd.x86_64.json, radeon_icd.i686.json, ...).
-    local vk_gen="$root/share/vulkan.$$"
-    rm -rf "$vk_gen"; mkdir -p "$vk_gen/icd.d"
-    for d in /usr/share/vulkan/*; do
-        [ "$(basename "$d")" = icd.d ] && continue
-        link "$d" "$vk_gen"
-    done
-    for j in /usr/share/vulkan/icd.d/*.json; do link "$j" "$vk_gen/icd.d"; done
-    if have "$mesa"; then
-        for j in "$mesa"/share/vulkan/icd.d/*.json; do link "$j" "$vk_gen/icd.d"; done
-    fi
-    swap "$root/share/vulkan" "vulkan.$$"
-
     # Drop generations left by earlier composes this boot.
-    local keep=" $(readlink "$root/lib") $(readlink "$root/share/glvnd/egl_vendor.d") $(readlink "$root/share/vulkan") "
-    for d in "$root"/lib.* "$root"/share/glvnd/egl_vendor.d.* "$root"/share/vulkan.*; do
+    local keep=" $(readlink "$root/share/glvnd/egl_vendor.d") "
+    for d in "$root"/share/glvnd/egl_vendor.d.*; do
         [ -d "$d" ] || continue
         [[ "$keep" == *" $(basename "$d") "* ]] && continue
         rm -rf "$d"
     done
 }
 
-compose_arch /run/opengl-driver    /usr/share/defenestra/opengl-driver/lib \
-             /var/lib/defenestra/opengl/mesa   /var/lib/defenestra/opengl/gbm
-compose_arch /run/opengl-driver-32 /usr/share/defenestra/opengl-driver/lib32 \
-             /var/lib/defenestra/opengl/mesa32 /var/lib/defenestra/opengl/gbm32
+compose_arch /run/opengl-driver    /var/lib/defenestra/opengl/mesa
+compose_arch /run/opengl-driver-32 /var/lib/defenestra/opengl/mesa32

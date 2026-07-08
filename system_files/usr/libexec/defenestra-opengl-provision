@@ -21,13 +21,11 @@ if [ -e "$dest/mesa/lib" ] && [ -e "$dest/mesa32/lib" ] \
     exit 0
 fi
 
-# libgbm is a separate output; i686 covers 32-bit nix GL apps
-# as they hardcode /run/opengl-driver-32.
+# mesa.out carries the egl_vendor.d + vulkan ICD descriptors compose links into
+# /run/opengl-driver{,-32}/share; i686 covers 32-bit nix GL apps.
 nixflags=(--refresh --extra-experimental-features 'nix-command flakes')
 nix build "${nixflags[@]}" --out-link "$dest/mesa"   "$ref#mesa"
-nix build "${nixflags[@]}" --out-link "$dest/gbm"    "$ref#libgbm"
 nix build "${nixflags[@]}" --out-link "$dest/mesa32" "$ref#pkgsi686Linux.mesa"
-nix build "${nixflags[@]}" --out-link "$dest/gbm32"  "$ref#pkgsi686Linux.libgbm"
 
 printf '%s\n' "$rev" > "$dest/.rev"
 
