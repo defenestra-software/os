@@ -1,10 +1,13 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Script version - bump VER to force re-run on update
+FLATPAK_LIST="/usr/share/defenestra/default-flatpaks"
+
+# Re-run when the script or the flatpak list changes, so existing installs
+# pick up newly-added defaults on the next image update.
 VER=3
-SCRIPT_HASH=$(tr -d '[:space:]' <"$0" | sha256sum | cut -d ' ' -f 1)
-VER="$VER-$SCRIPT_HASH"
+CONTENT_HASH=$(cat "$0" "$FLATPAK_LIST" 2>/dev/null | tr -d '[:space:]' | sha256sum | cut -d ' ' -f 1)
+VER="$VER-$CONTENT_HASH"
 VER_FILE="/etc/defenestra/flatpak_manager_version"
 VER_RAN=$(cat "$VER_FILE" 2>/dev/null)
 IMAGE_NAME_FILE="/etc/defenestra/flatpak_manager_image_name"
@@ -113,13 +116,21 @@ else
         org.mozilla.firefox
 fi
 
-# Install default Flatpaks if not already present
-FLATPAK_LIST="/usr/share/defenestra/default-flatpaks"
+# Install default Flatpaks, then verify. Stamp the version only once the whole
+# set is present, so a failed run is retried by
+# systemd instead of marking itself done.
 if [[ -f "$FLATPAK_LIST" ]]; then
-    while IFS= read -r app; do
-        [[ -z "$app" || "$app" == \#* ]] && continue
-        flatpak install --system --noninteractive --assumeyes flathub "$app" || :
-    done < "$FLATPAK_LIST"
+    mapfile -t want < <(grep -vE '^[[:space:]]*(#|$)' "$FLATPAK_LIST")
+    flatpak install --system --noninteractive --assumeyes flathub "${want[@]}" || :
+
+    installed="$(flatpak list --system --columns=application)"
+    for ref in "${want[@]}"; do
+        id="${ref#*/}"; id="${id%%/*}"
+        if ! grep -qxF "$id" <<<"$installed"; then
+            echo "default flatpak not installed yet: $id (will retry)" >&2
+            exit 1
+        fi
+    done
 fi
 
 mkdir -p /etc/defenestra

@@ -126,7 +126,6 @@ build-live-iso $target=image_name $tag=default_tag: (_rootful_load_image target 
         -v /var/lib/containers/storage:/usr/lib/containers/storage:ro \
         --build-arg BASE_IMAGE="$BASE_IMAGE" \
         --build-arg INSTALL_IMAGE_PAYLOAD="$INSTALL_IMAGE" \
-        --build-arg FLATPAK_DIR_SHORTNAME="gnome_flatpaks" \
         -t "$PAYLOAD_TAG" \
         installer/
 

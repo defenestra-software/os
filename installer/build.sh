@@ -9,7 +9,6 @@ set -exo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_IMAGE=${BASE_IMAGE:?}
 INSTALL_IMAGE_PAYLOAD=${INSTALL_IMAGE_PAYLOAD:?}
-FLATPAK_DIR_SHORTNAME=${FLATPAK_DIR_SHORTNAME:?}
 
 # Create the directory that /root is symlinked to
 mkdir -p "$(realpath /root)"
@@ -19,7 +18,8 @@ mount -o remount,rw /proc/sys
 
 # Install flatpaks
 curl --retry 3 -Lo /etc/flatpak/remotes.d/flathub.flatpakrepo https://dl.flathub.org/repo/flathub.flatpakrepo
-xargs -r flatpak install -y --noninteractive <"/src/$FLATPAK_DIR_SHORTNAME/flatpaks"
+xargs -r flatpak install -y --noninteractive \
+    < <(grep -vE '^[[:space:]]*(#|$)' /usr/share/defenestra/default-flatpaks)
 
 # Pull the container image to be installed
 if mountpoint -q /usr/lib/containers/storage; then

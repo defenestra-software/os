@@ -1,14 +1,35 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# defenestraOS default Flatpaks - installed on first boot
+# defenestraOS default Flatpaks. Single source of truth, read by both:
+#   installer/build.sh      - baked into the ISO, rsync'd to the target at install
+#   defenestra-flatpak-manager - installs missing entries after an image update
+# Full flatpak refs (TYPE/ID/ARCH/BRANCH). Blank and '#' lines are ignored.
 
-# Browser
-org.mozilla.firefox
+# Core GNOME apps
+app/org.gnome.Calculator/x86_64/stable
+app/org.gnome.Calendar/x86_64/stable
+app/org.gnome.Characters/x86_64/stable
+app/org.gnome.Contacts/x86_64/stable
+app/org.gnome.clocks/x86_64/stable
+app/org.gnome.font-viewer/x86_64/stable
+app/org.gnome.Logs/x86_64/stable
+app/org.gnome.Loupe/x86_64/stable
+app/org.gnome.NautilusPreviewer/x86_64/stable
+app/org.gnome.Papers/x86_64/stable
+app/org.gnome.Showtime/x86_64/stable
+app/org.gnome.TextEditor/x86_64/stable
+app/org.gnome.Weather/x86_64/stable
+app/org.gnome.baobab/x86_64/stable
 
-# System monitor (replaces gnome-system-monitor)
-net.nokyan.Resources
+# System utilities
+app/com.mattjakeman.ExtensionManager/x86_64/stable
+app/com.github.tchx84.Flatseal/x86_64/stable
+app/net.nokyan.Resources/x86_64/stable
+app/com.ranfdev.DistroShelf/x86_64/stable
 
-# Extension management
-com.mattjakeman.ExtensionManager
+# Backups
+app/org.gnome.DejaDup/x86_64/stable
 
-# Flatpak permissions manager
-com.github.tchx84.Flatseal
+# Vulkan overlay layers, branch-pinned to the platform runtime
+runtime/org.freedesktop.Platform.VulkanLayer.MangoHud/x86_64/25.08
+runtime/org.freedesktop.Platform.VulkanLayer.vkBasalt/x86_64/25.08
+runtime/org.freedesktop.Platform.VulkanLayer.OBSVkCapture/x86_64/25.08

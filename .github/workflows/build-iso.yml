@@ -115,7 +115,6 @@ jobs:
             --volume /var/lib/containers/storage:/usr/lib/containers/storage:ro \
             --build-arg BASE_IMAGE="$BASE_IMAGE" \
             --build-arg INSTALL_IMAGE_PAYLOAD="$INSTALL_IMAGE_PAYLOAD" \
-            --build-arg FLATPAK_DIR_SHORTNAME="gnome_flatpaks" \
             -t localhost/payload:latest installer/
 
       - name: Build ISOs
