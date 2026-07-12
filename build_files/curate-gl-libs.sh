@@ -2,25 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Build /usr/share/defenestra/opengl-driver/{lib,lib32} at image build time
-# by symlinking host GPU userspace + ldd-closure deps. tmpfiles wires
-# /run/opengl-driver/{lib,lib32} -> these dirs at boot.
-#
-# Why curated instead of `L /run/opengl-driver/lib -> /usr/lib64`?
-# nix-built GL apps find the entry-point driver (libGL, libvulkan_*.so) via
-# the /run/opengl-driver path. But Mesa drivers have transitive deps (libLLVM,
-# libz, libdrm, libelf, libzstd, ...) that nix's ld-linux can't resolve unless
-# /run/opengl-driver/lib is on LD_LIBRARY_PATH. Surfacing the whole /usr/lib64
-# there shadows libc/libssl/libstdc++/etc. in unrelated nix processes. A
-# narrow lib dir holds only GPU userspace -> safe to expose system-wide.
-#
-# libstdc++.so.6 and libgcc_s.so.1 are intentionally NOT excluded. Mesa's
-# libLLVM is built against Fedora's gcc; on F44 those are newer than any nix
-# channel ships, so forward-compat ABI works in the direction we want.
 
 set -euo pipefail
 
 curate_arch() {
-    local libdir="$1" outdir="$2" arch_suffix="$3"
+    local libdir="$1" outdir="$2"
 
     if [ ! -d "$libdir" ]; then
         echo ":: skip $libdir (not present)"
@@ -30,22 +16,13 @@ curate_arch() {
     mkdir -p "$outdir"
     find "$outdir" -maxdepth 1 -type l -delete 2>/dev/null || true
 
-    local tmp pat lib json icd
+    local tmp pat lib
     tmp="$(mktemp)"
 
     {
-        # Vendor-tagged GLX/EGL backends (libGLX_mesa, libGLX_nvidia, ...)
-        # come along via the *_*.so.* globs. NVIDIA blobs are absent on
-        # AMD/Intel hosts; unmatched globs expand to nothing here.
         for pat in \
-            'libGL.so.*' 'libEGL.so.*' \
-            'libGLESv1_CM.so.*' 'libGLESv2.so.*' \
-            'libGLdispatch.so.*' 'libGLX.so.*' 'libOpenGL.so.*' \
-            'libGLX_*.so.*' 'libEGL_*.so.*' \
-            'libgbm.so.*' 'libglapi.so.*' 'libxatracker.so.*' \
-            'libva.so.*' 'libva-drm.so.*' 'libva-x11.so.*' 'libva-wayland.so.*' \
-            'libvdpau.so.*' 'libdrm*.so.*' \
-            'libVkLayer_*.so' \
+            'libGLX_nvidia.so.*' 'libEGL_nvidia.so.*' \
+            'libGLESv1_CM_nvidia.so.*' 'libGLESv2_nvidia.so.*' \
             'libnvidia-*.so.*' 'libcuda.so.*' 'libnvcuvid.so.*' 'libnvoptix*.so.*' \
             'libvdpau_nvidia.so.*'
         do
@@ -53,19 +30,6 @@ curate_arch() {
                 [ -e "$lib" ] && echo "$lib"
             done
         done
-
-        # Vulkan ICDs from the JSON manifests so every Mesa driver (radeon,
-        # intel, lvp, virtio, nouveau, panvk, freedreno, asahi, ...) and any
-        # vendor driver dropping a manifest gets picked up automatically.
-        if [ -d /usr/share/vulkan/icd.d ]; then
-            for json in /usr/share/vulkan/icd.d/*"${arch_suffix}".json; do
-                [ -e "$json" ] || continue
-                icd="$(sed -nE 's/.*"library_path"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$json" | head -1)"
-                [ -z "$icd" ] && continue
-                [[ "$icd" != /* ]] && icd="$libdir/$icd"
-                [ -e "$icd" ] && echo "$icd"
-            done
-        fi
     } | sort -u > "$tmp"
 
     # ldd closure until fixed point. Only keep deps resolving inside libdir;
@@ -124,5 +88,5 @@ curate_arch() {
     echo ":: linked $count libs into $outdir"
 }
 
-curate_arch /usr/lib64 /usr/share/defenestra/opengl-driver/lib   .x86_64
-curate_arch /usr/lib   /usr/share/defenestra/opengl-driver/lib32 .i686
+curate_arch /usr/lib64 /usr/share/defenestra/opengl-driver/lib
+curate_arch /usr/lib   /usr/share/defenestra/opengl-driver/lib32

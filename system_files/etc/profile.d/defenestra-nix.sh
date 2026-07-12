@@ -19,9 +19,6 @@ if [ -d /nix/var/nix/profiles/default ]; then
     export NIXPKGS_ALLOW_UNFREE=1
 fi
 
-# Surface host mesa to nix apps for login shells too. The dir
-# is curated (GPU drivers + direct deps only), so prepending it cannot shadow
-# libc/libssl/libstdc++/etc. in nix processes.
 if [ -d /run/opengl-driver/lib ]; then
     case ":${LD_LIBRARY_PATH:-}:" in
         *":/run/opengl-driver/lib:"*) ;;

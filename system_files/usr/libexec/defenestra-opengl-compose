@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Make nix-built GL apps use a glibc-consistent Nix Mesa, without breaking the host GL.
-
 
 set -euo pipefail
 shopt -s nullglob
@@ -25,14 +23,30 @@ compose_arch() {
     { [ -n "$mesa" ] && [ -d "$mesa/lib" ]; } || return 0
 
     mkdir -p "$root/share/glvnd"
-    local gen="$root/share/glvnd/egl_vendor.d.$$"
-    rm -rf "$gen"; mkdir -p "$gen"
-    for j in "$mesa"/share/glvnd/egl_vendor.d/*.json; do link "$j" "$gen"; done
+    local egl_gen="$root/share/glvnd/egl_vendor.d.$$"
+    rm -rf "$egl_gen"; mkdir -p "$egl_gen"
+    for j in "$mesa"/share/glvnd/egl_vendor.d/*.json; do link "$j" "$egl_gen"; done
+    for j in /usr/share/glvnd/egl_vendor.d/*.json; do
+        [ -e "$egl_gen/$(basename "$j")" ] || link "$j" "$egl_gen"
+    done
     swap "$root/share/glvnd/egl_vendor.d" "egl_vendor.d.$$"
 
+    local vk_gen="$root/share/vulkan.$$"
+    rm -rf "$vk_gen"; mkdir -p "$vk_gen/icd.d"
+    for d in /usr/share/vulkan/*; do
+        [ "$(basename "$d")" = icd.d ] && continue
+        link "$d" "$vk_gen"
+    done
+    for j in /usr/share/vulkan/icd.d/*.json; do
+        grep -q '"library_path"[[:space:]]*:[[:space:]]*"[^"]*libvulkan_' "$j" && continue
+        link "$j" "$vk_gen/icd.d"
+    done
+    for j in "$mesa"/share/vulkan/icd.d/*.json; do link "$j" "$vk_gen/icd.d"; done
+    swap "$root/share/vulkan" "vulkan.$$"
+
     # Drop generations left by earlier composes this boot.
-    local keep=" $(readlink "$root/share/glvnd/egl_vendor.d") "
-    for d in "$root"/share/glvnd/egl_vendor.d.*; do
+    local keep=" $(readlink "$root/share/glvnd/egl_vendor.d") $(readlink "$root/share/vulkan") "
+    for d in "$root"/share/glvnd/egl_vendor.d.* "$root"/share/vulkan.*; do
         [ -d "$d" ] || continue
         [[ "$keep" == *" $(basename "$d") "* ]] && continue
         rm -rf "$d"
