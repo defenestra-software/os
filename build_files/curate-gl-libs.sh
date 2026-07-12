@@ -4,6 +4,7 @@
 # Build /usr/share/defenestra/opengl-driver/{lib,lib32} at image build time
 
 set -euo pipefail
+shopt -s nullglob
 
 curate_arch() {
     local libdir="$1" outdir="$2"
@@ -27,7 +28,7 @@ curate_arch() {
             'libvdpau_nvidia.so.*'
         do
             for lib in $libdir/$pat; do
-                [ -e "$lib" ] && echo "$lib"
+                if [ -e "$lib" ]; then echo "$lib"; fi
             done
         done
     } | sort -u > "$tmp"
