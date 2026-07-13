@@ -33,9 +33,14 @@ rm -rf /usr/share/backgrounds/steamdeck/
 rm -rf /usr/share/backgrounds/convergence /usr/share/backgrounds/convergence.jxl /usr/share/backgrounds/convergence-dynamic.xml
 rm -f /usr/share/backgrounds/giants.jxl
 rm -f /usr/share/backgrounds/default.jxl /usr/share/backgrounds/default-dark.jxl
+rm -f /usr/share/backgrounds/bazzite-blue.png /usr/share/backgrounds/bazzite-glass.png
+
 rm -f /usr/share/gnome-background-properties/convergence.xml \
       /usr/share/gnome-background-properties/convergence-dynamic.xml \
-      /usr/share/gnome-background-properties/VGUI2.xml
+      /usr/share/gnome-background-properties/VGUI2.xml \
+      /usr/share/gnome-background-properties/bazziteblue.xml \
+      /usr/share/gnome-background-properties/glass.xml \
+      /usr/share/gnome-background-properties/giants.xml
 
 rm -rf /usr/share/ublue-os/motd/
 rm -f /usr/libexec/ublue-motd
