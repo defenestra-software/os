@@ -179,6 +179,10 @@ if [ -d "${BUNDLED_EXT_SRC}/show-logout@defenestra.io" ]; then
     cp -r "${BUNDLED_EXT_SRC}/show-logout@defenestra.io" "${BUNDLED_EXT_DST}/"
 fi
 
+if [ -d "${BUNDLED_EXT_SRC}/store-integration@defenestra.io" ]; then
+    cp -r "${BUNDLED_EXT_SRC}/store-integration@defenestra.io" "${BUNDLED_EXT_DST}/"
+fi
+
 if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
     cp -r "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" "${BUNDLED_EXT_DST}/"
     if [ -d "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas" ]; then
@@ -277,7 +281,16 @@ systemctl enable defenestra-opengl-compose.service 2>/dev/null || true
 systemctl enable docker.socket 2>/dev/null || true
 
 systemctl enable defenestra-brew-setup.service 2>/dev/null || true
-systemctl enable defenestra-brew-update.timer 2>/dev/null || true
+systemctl enable store-system.service 2>/dev/null || true
+systemctl --global enable store-user.service 2>/dev/null || true
+
+# The Store updates all software including the OS image and installed apps
+for unit in \
+    uupd.timer \
+    bootc-fetch-apply-updates.timer \
+    rpm-ostreed-automatic.timer; do
+    systemctl mask "${unit}" 2>/dev/null || true
+done
 
 systemctl enable defenestra-flatpak-manager.service 2>/dev/null || true
 systemctl enable defenestra-hardware-setup.service 2>/dev/null || true

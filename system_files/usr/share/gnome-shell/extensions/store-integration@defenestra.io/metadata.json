@@ -1,0 +1,7 @@
+{
+  "uuid": "store-integration@defenestra.io",
+  "name": "Store Integration",
+  "description": "Add \"Show in Store\" and \"Uninstall\" to the app icon context menu, wired to the defenestra Store.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "url": "https://defenestra.io"
+}
