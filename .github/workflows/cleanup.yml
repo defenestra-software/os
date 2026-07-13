@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Prune untagged + stale dated tags
-        uses: snok/container-retention-policy@v3.0.1
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
         with:
           account: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -26,5 +26,5 @@ jobs:
             defenestraos-nvidia-open
             defenestraos-handheld
           cut-off: 90d
-          image-tags: '!latest !stable'
+          image-tags: '!latest !stable !beta !canary'
           tag-selection: 'both'

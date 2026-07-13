@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+---
+name: Promote image channel
+
+# Channels are not rebuilt, they are retagged. build.yml publishes every image
+# to :canary; this workflow moves an existing digest into :beta or :stable once
+# it has been tested enough. The image users boot on stable is same image that
+# was tested on canary
+#
+# Rolling back is the same operation: promote an older dated tag onto :stable.
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "Source tag to promote (e.g. canary.20260713)"
+        required: true
+        type: string
+      to:
+        description: "Channel to promote it into"
+        required: true
+        type: choice
+        options:
+          - beta
+          - stable
+
+env:
+  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
+  # Keep in sync with the build matrix in build.yml.
+  IMAGES: "defenestraos defenestraos-nvidia defenestraos-nvidia-open defenestraos-handheld"
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.from }} to ${{ inputs.to }}
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+
+    steps:
+      - name: Prepare environment
+        run: |
+          IMAGE_REGISTRY="${{ env.IMAGE_REGISTRY }}"
+          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> "${GITHUB_ENV}"
+
+      - name: Reject no-op promotion
+        run: |
+          if [ "${{ inputs.from }}" = "${{ inputs.to }}" ]; then
+            echo "::error::Source and target are both '${{ inputs.to }}'."
+            exit 1
+          fi
+
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | skopeo login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Promote
+        env:
+          FROM_TAG: ${{ inputs.from }}
+          TO_TAG: ${{ inputs.to }}
+        run: |
+          set -euo pipefail
+
+          # stable is what an untagged pull resolves to, so it moves in lockstep.
+          TARGETS="${TO_TAG}"
+          if [ "${TO_TAG}" = "stable" ]; then
+            TARGETS="stable latest"
+          fi
+
+          # Resolve every image before tagging any of them. A partial promotion
+          # would strand one variant (say nvidia) on a different build than the
+          # rest, which is far worse than promoting nothing at all.
+          declare -A DIGESTS
+          for image in ${IMAGES}; do
+            repo="${IMAGE_REGISTRY}/${image}"
+            if ! digest=$(skopeo inspect --format '{{.Digest}}' "docker://${repo}:${FROM_TAG}" 2>/dev/null); then
+              echo "::error::${repo}:${FROM_TAG} does not exist. Nothing was promoted."
+              exit 1
+            fi
+            DIGESTS[$image]="${digest}"
+            echo "resolved ${image}:${FROM_TAG} -> ${digest}"
+          done
+
+          echo "### Promoted \`${FROM_TAG}\` to \`${TO_TAG}\`" >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| Image | Digest |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| --- | --- |" >> "${GITHUB_STEP_SUMMARY}"
+
+          for image in ${IMAGES}; do
+            repo="${IMAGE_REGISTRY}/${image}"
+            digest="${DIGESTS[$image]}"
+
+            for target in ${TARGETS}; do
+              skopeo copy "docker://${repo}@${digest}" "docker://${repo}:${target}"
+
+              # The whole model rests on the digest surviving the retag: cosign
+              # signed the digest at build time, so a preserved digest keeps the
+              # signature valid and makes the promoted image provably the tested
+              # one. If skopeo ever rewrote the manifest, both would break.
+              landed=$(skopeo inspect --format '{{.Digest}}' "docker://${repo}:${target}")
+              if [ "${landed}" != "${digest}" ]; then
+                echo "::error::${repo}:${target} landed as ${landed}, expected ${digest}."
+                exit 1
+              fi
+              echo "tagged ${repo}:${target} (${digest})"
+            done
+
+            echo "| \`${image}\` | \`${digest}\` |" >> "${GITHUB_STEP_SUMMARY}"
+          done
+
+  build-iso:
+    name: Rebuild stable ISOs
+    needs: promote
+    if: inputs.to == 'stable'
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    uses: ./.github/workflows/build-iso.yml
+    with:
+      publish: true
+    secrets: inherit

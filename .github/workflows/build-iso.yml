@@ -4,7 +4,18 @@ name: Build Live ISOs
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload to R2 (replaces the ISOs users download)"
+        required: false
+        default: false
+        type: boolean
   workflow_call:
+    inputs:
+      publish:
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths:
@@ -20,7 +31,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Pin the release date once. The matrix jobs run for well over an hour, so
+  # letting each compute its own date would split a single release across two
+  # archive folders whenever a build straddles UTC midnight.
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      release_date: ${{ steps.date.outputs.release_date }}
+    steps:
+      - name: Pin release date
+        id: date
+        run: echo "release_date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
   build-iso:
+    needs: prepare
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -69,8 +93,9 @@ jobs:
         id: generate-tag
         shell: bash
         run: |
-          TAG="latest"
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          # The payload ref is what the installed system tracks
+          # (titanoboa_hook_postrootfs.sh runs `bootc switch $ref:$tag`)
+          echo "tag=stable" >> $GITHUB_OUTPUT
 
       - name: Lowercase Registry
         id: registry_case
@@ -147,3 +172,74 @@ jobs:
           retention-days: 3
           compression-level: 0
           overwrite: true
+
+      - name: Upload ISOs and Checksum to R2
+        if: ${{ inputs.publish }}
+        shell: bash
+        env:
+          RCLONE_CONFIG_S3_TYPE: s3
+          RCLONE_CONFIG_S3_PROVIDER: ${{ secrets.S3_PROVIDER }}
+          RCLONE_CONFIG_S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_S3_REGION: ${{ secrets.S3_REGION }}
+          RCLONE_CONFIG_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          RCLONE_CONFIG_S3_NO_CHECK_BUCKET: "true"
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          SOURCE_DIR: ${{ steps.upload-directory.outputs.iso-upload-dir }}
+          RELEASE_DATE: ${{ needs.prepare.outputs.release_date }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+          # iso/latest is the URL the download page points at, so it must keep
+          # working across releases: overwrite in place rather than versioning
+          # the public path. iso/archive keeps the last few releases around so a
+          # bad one can be handed back to users while a fix builds.
+          rclone copy "${SOURCE_DIR}" "S3:${BUCKET}/iso/latest"
+          rclone copy "${SOURCE_DIR}" "S3:${BUCKET}/iso/archive/${RELEASE_DATE}"
+
+  prune-archive:
+    needs: [prepare, build-iso]
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-24.04
+    env:
+      KEEP: 3
+    steps:
+      - name: Prune old ISO archives
+        shell: bash
+        env:
+          RCLONE_CONFIG_S3_TYPE: s3
+          RCLONE_CONFIG_S3_PROVIDER: ${{ secrets.S3_PROVIDER }}
+          RCLONE_CONFIG_S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_S3_REGION: ${{ secrets.S3_REGION }}
+          RCLONE_CONFIG_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          RCLONE_CONFIG_S3_NO_CHECK_BUCKET: "true"
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+          # Cap by count, not age: promotions can happen daily, and an age-based
+          # rule would let the archive grow to ~24GB per release with no ceiling.
+          # Folders are YYYYMMDD, so a reverse lexicographic sort is newest-first.
+          mapfile -t stale < <(
+            rclone lsf --dirs-only "S3:${BUCKET}/iso/archive/" \
+              | sort -r \
+              | tail -n "+$((KEEP + 1))"
+          )
+
+          if [ ${#stale[@]} -eq 0 ]; then
+            echo "Nothing to prune; at most ${KEEP} archived releases exist."
+            exit 0
+          fi
+
+          for dir in "${stale[@]}"; do
+            echo "Pruning iso/archive/${dir}"
+            rclone purge "S3:${BUCKET}/iso/archive/${dir}"
+          done
+
+          echo "Pruned ${#stale[@]} release(s); kept the newest ${KEEP}." \
+            >> "${GITHUB_STEP_SUMMARY}"

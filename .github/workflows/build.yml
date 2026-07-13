@@ -18,7 +18,8 @@ env:
   IMAGE_DESC: "defenestraOS - Cloud-native gaming and workstation OS"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue,defenestra,gaming,workstation"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
-  DEFAULT_TAG: "latest"
+  # Every build lands on canary. Images reach beta and stable by being promoted
+  BUILD_CHANNEL: "canary"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -96,7 +97,7 @@ jobs:
           esac
 
           NEW=$(skopeo inspect --format '{{.Digest}}' "docker://${BASE}")
-          OLD=$(skopeo inspect "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:latest" 2>/dev/null \
+          OLD=$(skopeo inspect "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${BUILD_CHANNEL}" 2>/dev/null \
             | jq -r '.Labels["org.defenestra.base.digest"] // empty' || true)
 
           echo "base=${BASE}" >> "$GITHUB_OUTPUT"
@@ -129,6 +130,8 @@ jobs:
         id: date
         run: |
           echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
+          # Identifies the build, not the channel.
+          echo "build_id=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
 
       - name: Image Metadata
         if: steps.freshness.outputs.skip != 'true'
@@ -136,9 +139,8 @@ jobs:
         id: metadata
         with:
           tags: |
-            type=raw,value=${{ env.DEFAULT_TAG }}
-            type=raw,value=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
-            type=raw,value={{date 'YYYYMMDD'}}
+            type=raw,value=${{ env.BUILD_CHANNEL }}
+            type=raw,value=${{ env.BUILD_CHANNEL }}.{{date 'YYYYMMDD'}}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
@@ -147,7 +149,8 @@ jobs:
             org.opencontainers.image.description=${{ env.IMAGE_DESC }}
             org.opencontainers.image.title=${{ env.IMAGE_NAME }}
             org.opencontainers.image.vendor=${{ github.repository_owner }}
-            org.opencontainers.image.version=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
+            org.opencontainers.image.version=${{ steps.date.outputs.build_id }}
+            org.opencontainers.image.revision=${{ github.sha }}
             io.artifacthub.package.deprecated=false
             io.artifacthub.package.keywords=${{ env.IMAGE_KEYWORDS }}
             io.artifacthub.package.license=GPL-3.0-or-later
@@ -172,16 +175,16 @@ jobs:
         run: |
           sudo buildah build \
             --target ${{ matrix.target }} \
-            --build-arg VERSION_TAG="${{ env.DEFAULT_TAG }}" \
+            --build-arg VERSION_TAG="${{ steps.date.outputs.build_id }}" \
             --build-arg VERSION_PRETTY="${{ env.VERSION_PRETTY }}" \
-            --tag ${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }} \
+            --tag ${{ env.IMAGE_NAME }}:${{ env.BUILD_CHANNEL }} \
             --layers \
             --format docker \
             .
 
           # Tag all metadata tags
           for tag in ${{ steps.metadata.outputs.tags }}; do
-            sudo buildah tag ${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }} ${{ env.IMAGE_NAME }}:${tag}
+            sudo buildah tag ${{ env.IMAGE_NAME }}:${{ env.BUILD_CHANNEL }} ${{ env.IMAGE_NAME }}:${tag}
           done
 
       - name: Push To GHCR
