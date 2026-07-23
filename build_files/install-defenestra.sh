@@ -5,7 +5,7 @@ set -ouex pipefail
 echo ":: Installing defenestraOS packages..."
 
 dnf5 -y copr enable defenestra/defenestra
-dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd
+dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd gnome-shell-extension-hanabi
 dnf5 -y copr disable defenestra/defenestra
 
 # Defenestra hosted repository
