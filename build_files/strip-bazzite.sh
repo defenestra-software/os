@@ -51,6 +51,13 @@ fi
 
 rm -f /etc/dconf/db/distro.d/10-bazzite-deck-silverblue-logomenu 2>/dev/null || true
 
+# Bazzite ships a patched bluez git snapshot. Their 5.87 build (git.7950.
+# 32d2ebd9.dirty) segfaults in device_found_callback on every LE discovery
+# result, killing bluetoothd and with it Web Bluetooth. Sync back to stock
+# Fedora bluez; drop this once bazzite's bluez stops crashing (test: any
+# BLE scan with an advertising device nearby, then coredumpctl list bluetoothd).
+dnf5 -y distro-sync --repo=fedora --repo=updates 'bluez*'
+
 # Our overrides ship via system_files overlay.
 rm -f /usr/share/glib-2.0/schemas/zz0-*bazzite*.gschema.override 2>/dev/null || true
 
