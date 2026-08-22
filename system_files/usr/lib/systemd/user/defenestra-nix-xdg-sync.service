@@ -1,8 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-[Unit]
-Description=Mirror Nix user profile XDG entries into ~/.local/share
-
-[Service]
-Type=oneshot
-ExecStart=/usr/libexec/defenestra-nix-xdg-sync --user
-Nice=10

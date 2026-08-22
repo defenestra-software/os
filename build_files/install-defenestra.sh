@@ -272,10 +272,6 @@ systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
 # NSS bridge: lets Nix-built binaries resolve host sssd/FreeIPA identities.
 systemctl enable nsncd.service 2>/dev/null || true
-# xdg-sync mirrors Nix profile entries into XDG dirs so GNOME Shell shows new
-# apps without relog. User unit lit via systemd/user-preset/90-defenestra.preset.
-systemctl enable defenestra-nix-xdg-sync.path 2>/dev/null || true
-systemctl --global enable defenestra-nix-xdg-sync.path 2>/dev/null || true
 # Hybrid GL: first-boot fetch of a nix-built Mesa (glibc-consistent) and
 # per-boot compose for /run/opengl-driver so nix GL/Vulkan apps stop
 # breaking when Fedora's glibc outpaces the nix channel's. NVIDIA stays host.
