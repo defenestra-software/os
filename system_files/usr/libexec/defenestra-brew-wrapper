@@ -1,0 +1,11 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Routes brew to the linuxbrew system user so the prefix has one owner.
+
+# brew refuses to run if CWD is not readable by the target user.
+cd /var/home/linuxbrew || cd /
+# -H: caches/taps/state land in the shared prefix, not the caller's home.
+# XDG_RUNTIME_DIR: brew services talks to linuxbrew's systemd --user.
+# UID from id: sysusers allocates it dynamically.
+exec sudo -H -u linuxbrew "XDG_RUNTIME_DIR=/run/user/$(id -u linuxbrew)" \
+    /var/home/linuxbrew/.linuxbrew/bin/brew "$@"

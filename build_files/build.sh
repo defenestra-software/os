@@ -11,6 +11,7 @@ echo "   IMAGE_VARIANT=${IMAGE_VARIANT:-unset}"
 "${SCRIPT_DIR}/strip-bazzite.sh"
 "${SCRIPT_DIR}/rename-scripts.sh"
 "${SCRIPT_DIR}/install-defenestra.sh"
+"${SCRIPT_DIR}/gen-protected-path.sh"
 "${SCRIPT_DIR}/image-info"
 "${SCRIPT_DIR}/finalize.sh"
 

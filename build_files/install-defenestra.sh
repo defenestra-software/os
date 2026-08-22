@@ -30,8 +30,9 @@ dnf5 -y install gnome-initial-setup
 dnf5 -y install zsh
 
 # Brew is owned by the linuxbrew system user (UID < 1000 hides it from
-# gnome-initial-setup). /usr/bin/brew wrapper routes through `sudo -u linuxbrew`
-# so the prefix has one stable owner; wheel-only via sudoers.d/defenestra-brew.
+# gnome-initial-setup). /usr/libexec/defenestra-brew-wrapper routes through
+# `sudo -u linuxbrew` so the prefix has one stable owner; wheel-only via
+# sudoers.d/defenestra-brew.
 # Mask upstream brew-* units; defenestra-brew-* own the lifecycle as linuxbrew.
 systemd-sysusers /ctx/system_files/usr/lib/sysusers.d/defenestra-linuxbrew.conf
 systemctl mask brew-setup.service brew-update.service brew-update.timer \
@@ -39,7 +40,7 @@ systemctl mask brew-setup.service brew-update.service brew-update.timer \
 
 dnf5 -y install toolbox
 
-# Bazzite's mesa-libOpenCL (Rusticl) conflicts with ROCm's OpenCL ICD.
+# Bazzite's mesa-libOpenCL conflicts with ROCm's OpenCL ICD.
 # install_weak_deps=False keeps only compute libs, skips test/debug recommends.
 dnf5 -y remove mesa-libOpenCL
 dnf5 -y --setopt=install_weak_deps=False install \
@@ -100,7 +101,7 @@ dnf5 -y install --enable-repo="docker-ce-stable" "${docker_pkgs[@]}"
 
 # iptable_nat needed for docker-in-docker. See ublue-os/bluefin#2365.
 mkdir -p /etc/modules-load.d
-echo iptable_nat > /etc/modules-load.d/defenestra-docker.conf
+echo iptable_nat >/etc/modules-load.d/defenestra-docker.conf
 
 # F44 nix-daemon ships multi-user systemd units. /var/nix holds the store;
 # bound onto /nix via nix.mount at boot.
@@ -263,7 +264,7 @@ rm -rf "${TILINGSHELL_TMP}"
 # unstable happens to be on its first-boot day.
 mkdir -p /usr/share/defenestra
 curl -fsSL https://channels.nixos.org/nixpkgs-unstable/git-revision \
-    > /usr/share/defenestra/opengl-nixpkgs-rev
+    >/usr/share/defenestra/opengl-nixpkgs-rev
 
 systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
