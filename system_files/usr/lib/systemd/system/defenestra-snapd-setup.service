@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=One-time snapd configuration for defenestraOS
+# snap-confine refuses homes outside /home. refresh.hold keeps auto-refresh
+# off so the Store drives updates.
+After=snapd.socket snapd.service
+Requires=snapd.socket
+ConditionPathExists=!/var/lib/defenestra/.snapd-setup
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=10min
+ExecStartPre=/usr/bin/mkdir -p /var/lib/defenestra
+ExecStartPre=/usr/bin/snap wait system seed.loaded
+ExecStart=/usr/bin/snap set system homedirs=/var/home refresh.retain=2 refresh.hold=forever
+ExecStartPost=/usr/bin/touch /var/lib/defenestra/.snapd-setup

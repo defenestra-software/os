@@ -127,6 +127,11 @@ semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
 # contexts on the factory copy.
 restorecon -RF /usr/share/factory/var/nix
 
+# Installed, off by default. Classic snaps use hardcoded /snap
+dnf5 -y install snapd
+ln -s var/lib/snapd/snap /snap
+semanage fcontext -N -a -t snappy_var_lib_t '/snap'
+
 dnf5 -y install \
     sssd \
     sssd-dbus \
@@ -285,6 +290,8 @@ systemctl enable defenestra-opengl-provision.service 2>/dev/null || true
 systemctl enable defenestra-opengl-compose.service 2>/dev/null || true
 
 systemctl enable docker.socket 2>/dev/null || true
+
+systemctl --global enable snapd.session-agent.socket 2>/dev/null || true
 
 systemctl enable defenestra-brew-setup.service 2>/dev/null || true
 systemctl enable store-system.service 2>/dev/null || true
