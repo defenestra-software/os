@@ -129,6 +129,7 @@ restorecon -RF /usr/share/factory/var/nix
 
 # Installed, off by default. Classic snaps use hardcoded /snap
 dnf5 -y install snapd
+systemctl disable snapd.socket 2>/dev/null || true
 ln -s var/lib/snapd/snap /snap
 semanage fcontext -N -a -t snappy_var_lib_t '/snap'
 
