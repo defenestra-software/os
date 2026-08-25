@@ -248,12 +248,11 @@ fi
 
 dnf5 -y remove glib2-devel
 
-# Tiling Shell ships as prebuilt zip (TS/esbuild output with compiled schemas
-# + gresource + .mo). Pulling source would drag nodejs/npm into the build.
+# Download tilingshell from EGO
 command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
-TILINGSHELL_VERSION="17.3"
-TILINGSHELL_SHA256="63ab8230b62c1a888d5af40e47aef0676e5e99ac367e35f51a797fe3b9a79370"
-TILINGSHELL_URL="https://github.com/domferr/tilingshell/releases/download/${TILINGSHELL_VERSION}/tilingshell%40ferrarodomenico.com.zip"
+TILINGSHELL_EGO_VERSION="76"
+TILINGSHELL_SHA256="0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35"
+TILINGSHELL_URL="https://extensions.gnome.org/extension-data/tilingshellferrarodomenico.com.v${TILINGSHELL_EGO_VERSION}.shell-extension.zip"
 TILINGSHELL_DST="${BUNDLED_EXT_DST}/tilingshell@ferrarodomenico.com"
 TILINGSHELL_TMP="$(mktemp -d)"
 curl -fsSL -o "${TILINGSHELL_TMP}/ts.zip" "${TILINGSHELL_URL}"

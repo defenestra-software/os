@@ -19,11 +19,11 @@ dconf update 2>/dev/null || true
 # fail BIB. Disable all non-Fedora repos; packages are already installed.
 for repo in /etc/yum.repos.d/*.repo; do
     case "$(basename "$repo")" in
-        fedora.repo|fedora-updates.repo|fedora-updates-archive.repo)
-            ;;
-        *)
-            sed -i 's/^enabled=1/enabled=0/' "$repo" 2>/dev/null || true
-            ;;
+    fedora.repo | fedora-updates.repo | fedora-updates-archive.repo)
+        ;;
+    *)
+        sed -i 's/^enabled=1/enabled=0/' "$repo" 2>/dev/null || true
+        ;;
     esac
 done
 
@@ -42,5 +42,17 @@ echo ":: Rebuilding initramfs for kernel ${QUALIFIED_KERNEL}..."
 chmod 0600 "/usr/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
 
 dnf5 clean all
+
+# Verify rpmdb
+python3 - <<'PY'
+import sqlite3, sys
+db = sqlite3.connect("file:/usr/share/rpm/rpmdb.sqlite?mode=ro", uri=True)
+rows = db.execute("PRAGMA integrity_check").fetchall()
+if rows != [("ok",)]:
+    print("!! rpmdb integrity_check failed:", *rows[:10], sep="\n   ", file=sys.stderr)
+    sys.exit(1)
+PY
+rpm -q --whatprovides bash >/dev/null
+echo ":: rpmdb verified."
 
 echo ":: Finalization complete."
