@@ -7,7 +7,8 @@ echo ":: Installing defenestraOS packages..."
 dnf5 -y copr enable defenestra/defenestra
 dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd \
     gnome-shell-extension-hanabi \
-    looking-glass-client
+    looking-glass-client \
+    snapd
 dnf5 -y copr disable defenestra/defenestra
 
 # Defenestra hosted repository
@@ -123,6 +124,10 @@ restorecon -RF /usr/share/factory/var/nix
 
 # Installed, off by default. Classic snaps use hardcoded /snap
 dnf5 -y install snapd
+if ! rpm -q --qf '%{RELEASE}\n' snapd | grep -q defenestra; then
+    echo "!! snapd $(rpm -q snapd) is not the patched defenestra build" >&2
+    exit 1
+fi
 systemctl disable snapd.socket 2>/dev/null || true
 ln -s var/lib/snapd/snap /snap
 semanage fcontext -N -a -t snappy_var_lib_t '/snap'
