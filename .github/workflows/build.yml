@@ -172,7 +172,14 @@ jobs:
       # Workaround for issue:
       # https://github.com/actions/runner-images/issues/14597
       - name: Force native overlayfs for buildah
+        if: steps.freshness.outputs.skip != 'true'
         run: |
+          set -euo pipefail
+          echo "fuse-overlayfs on PATH: $(command -v fuse-overlayfs || echo none)"
+          echo "store marker: $(sudo cat /var/lib/containers/storage/overlay/.has-mount-program 2>/dev/null || echo none)"
+
+          sudo rm -f /usr/local/bin/fuse-overlayfs /usr/bin/fuse-overlayfs
+          sudo rm -rf /var/lib/containers/storage /run/containers/storage
           sudo tee /etc/containers/storage.conf >/dev/null <<'EOF'
           [storage]
           driver = "overlay"
@@ -181,9 +188,10 @@ jobs:
           [storage.options.overlay]
           mountopt = "nodev"
           EOF
-          sudo buildah info --format '{{ .store.GraphDriverName }} {{ .store.GraphOptions }}'
-          if sudo buildah info --format '{{ .store.GraphOptions }}' | grep -q mount_program; then
-            echo "::error::buildah is still configured with a mount_program" >&2
+
+          sudo buildah info --format '{{ .store.GraphDriverName }} {{ .store.GraphOptions }} {{ .store.GraphStatus }}'
+          if [ "$(sudo buildah info --format '{{ index .store.GraphStatus "Native Overlay Diff" }}')" != "true" ]; then
+            echo "::error::buildah is not on native overlayfs with native diff; refusing to start an hour-long build" >&2
             exit 1
           fi
 

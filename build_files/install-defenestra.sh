@@ -4,12 +4,6 @@ set -ouex pipefail
 
 echo ":: Installing defenestraOS packages..."
 
-# libsemanage commits by rename(); the lower-layer targeted dir gives EXDEV then
-# ENOTEMPTY on overlayfs. Copy-up before any semodule
-cp -a /etc/selinux/targeted /etc/selinux/targeted.copyup
-rm -rf /etc/selinux/targeted
-mv /etc/selinux/targeted.copyup /etc/selinux/targeted
-
 dnf5 -y copr enable defenestra/defenestra
 dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd \
     gnome-shell-extension-hanabi \
