@@ -6,12 +6,12 @@ on:
     branches:
       - main
   schedule:
-    - cron: '05 10 * * *'  # 10:05am UTC everyday
+    - cron: "05 10 * * *" # 10:05am UTC everyday
   push:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      - "**/README.md"
   workflow_dispatch:
 
 env:
@@ -169,6 +169,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Workaround for issue:
+      # https://github.com/actions/runner-images/issues/14597
+      - name: Force native overlayfs for buildah
+        run: |
+          sudo tee /etc/containers/storage.conf >/dev/null <<'EOF'
+          [storage]
+          driver = "overlay"
+          runroot = "/run/containers/storage"
+          graphroot = "/var/lib/containers/storage"
+          [storage.options.overlay]
+          mountopt = "nodev"
+          EOF
+          sudo buildah info --format '{{ .store.GraphDriverName }} {{ .store.GraphOptions }}'
+          if sudo buildah info --format '{{ .store.GraphOptions }}' | grep -q mount_program; then
+            echo "::error::buildah is still configured with a mount_program" >&2
+            exit 1
+          fi
+
       - name: Build Image
         if: steps.freshness.outputs.skip != 'true'
         id: build_image
@@ -199,7 +217,7 @@ jobs:
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         if: steps.freshness.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         with:
-          cosign-release: 'v2.6.1'
+          cosign-release: "v2.6.1"
 
       - name: Sign container image
         if: steps.freshness.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
