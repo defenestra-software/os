@@ -4,10 +4,15 @@ set -ouex pipefail
 
 echo ":: Stripping bazzite branding and onboarding..."
 
-# Verified against bazzite 43.20260403.0 (Silverblue).
+# Verified against bazzite 44.20260825 (Silverblue).
 dnf5 remove -y --noautoremove bazaar
 dnf5 remove -y --noautoremove bazzite-portal
 dnf5 remove -y --noautoremove webapp-manager
+
+# Remove bazzite-updater
+dnf5 remove -y --noautoremove bazzite-updater
+rm -f /usr/share/ublue-os/just/93-bazzite-update.just
+sed -i '\|/usr/share/ublue-os/just/93-bazzite-update.just|d' /usr/share/ublue-os/justfile
 
 rm -rf /usr/share/ublue-os/bazzite/
 find /usr/share/icons/hicolor -name 'bazzite-*' -delete 2>/dev/null || true
@@ -46,7 +51,7 @@ rm -rf /usr/share/ublue-os/motd/
 rm -f /usr/libexec/ublue-motd
 rm -f /etc/profile.d/user-motd.sh
 if [ -f /usr/share/fish/functions/fish_greeting.fish ]; then
-    sed -i '/ublue-motd/d' /usr/share/fish/functions/fish_greeting.fish
+      sed -i '/ublue-motd/d' /usr/share/fish/functions/fish_greeting.fish
 fi
 
 rm -f /etc/dconf/db/distro.d/10-bazzite-deck-silverblue-logomenu 2>/dev/null || true
@@ -59,15 +64,15 @@ rm -f /etc/dconf/db/distro.d/10-bazzite-deck-silverblue-logomenu 2>/dev/null || 
 dnf5 versionlock delete bluez bluez-libs bluez-obexd bluez-cups
 dnf5 -y distro-sync --repo=fedora --repo=updates 'bluez*'
 if rpm -q bluez | grep -q bazzite; then
-    echo "ERROR: bluez is still bazzite's build after distro-sync"
-    exit 1
+      echo "ERROR: bluez is still bazzite's build after distro-sync"
+      exit 1
 fi
 
 # Our overrides ship via system_files overlay.
 rm -f /usr/share/glib-2.0/schemas/zz0-*bazzite*.gschema.override 2>/dev/null || true
 
 if [ -f /etc/xdg/mimeapps.list ]; then
-    sed -i '/bazaar/d' /etc/xdg/mimeapps.list
+      sed -i '/bazaar/d' /etc/xdg/mimeapps.list
 fi
 
 # Disable originals so they don't conflict during rename. install-defenestra.sh
