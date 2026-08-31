@@ -110,6 +110,40 @@ jobs:
           sudo mount -o compress-force=zstd:2 /mnt/podman-storage.img /var/lib/containers/storage
           sudo systemctl start podman.service
 
+      # Workaround for issue:
+      # https://github.com/actions/runner-images/issues/14597
+      - name: Force native overlayfs for podman
+        run: |
+          set -euo pipefail
+          echo "fuse-overlayfs on root PATH: $(sudo bash -c 'command -v fuse-overlayfs' || echo none)"
+
+          sudo rm -f /usr/local/bin/fuse-overlayfs /usr/bin/fuse-overlayfs
+          sudo rm -rf /run/containers/storage
+          sudo tee /etc/containers/storage.conf >/dev/null <<'EOF'
+          [storage]
+          driver = "overlay"
+          runroot = "/run/containers/storage"
+          graphroot = "/var/lib/containers/storage"
+          [storage.options.overlay]
+          mountopt = "nodev"
+          EOF
+
+          sudo podman info --format '{{ .Store.GraphDriverName }} {{ .Store.GraphOptions }} {{ .Store.GraphStatus }}'
+          if sudo bash -c 'command -v fuse-overlayfs' >/dev/null \
+             || sudo podman info --format '{{ .Store.GraphOptions }}' | grep -q mount_program; then
+            echo "::error::a fuse-overlayfs mount program is still reachable; refusing to start the ISO build" >&2
+            exit 1
+          fi
+
+          ctr=$(sudo buildah from scratch)
+          fstype=$(findmnt -no FSTYPE "$(sudo buildah mount "$ctr")")
+          sudo buildah rm "$ctr" >/dev/null
+          echo "container mount fstype: $fstype"
+          case "$fstype" in
+            overlay) ;;
+            *) echo "::error::containers are not on kernel overlayfs (fstype: '${fstype:-none}')" >&2; exit 1 ;;
+          esac
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
