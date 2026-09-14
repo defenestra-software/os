@@ -166,7 +166,7 @@ if [ -f /usr/libexec/sssd/krb5_child ]; then
 fi
 
 flatpak remote-add --if-not-exists --from defenestra \
-    https://my.defenestra.io/downloads/defenestra.flatpakrepo 2>/dev/null || true
+    https://my.defenestra.io/downloads/defenestra.flatpakrepo
 
 if [ -d /ctx/system_files ] && [ "$(ls -A /ctx/system_files 2>/dev/null)" ]; then
     # Extensions handled below; nvidia overlay is conditional.
