@@ -101,15 +101,6 @@ jobs:
         if: ${{ steps.check_mnt.outputs.mnt_is_there == '1' }}
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
 
-      - name: Mount Container Storage BTRFS Loopback
-        run: |
-          sudo truncate -s 70G /mnt/podman-storage.img
-          sudo mkfs.btrfs -f /mnt/podman-storage.img
-          sudo podman system reset --force
-          sudo systemctl stop podman.service
-          sudo mount -o compress-force=zstd:2 /mnt/podman-storage.img /var/lib/containers/storage
-          sudo systemctl start podman.service
-
       # Workaround for issue:
       # https://github.com/actions/runner-images/issues/14597
       - name: Force native overlayfs for podman
@@ -118,7 +109,7 @@ jobs:
           echo "fuse-overlayfs on root PATH: $(sudo bash -c 'command -v fuse-overlayfs' || echo none)"
 
           sudo rm -f /usr/local/bin/fuse-overlayfs /usr/bin/fuse-overlayfs
-          sudo rm -rf /run/containers/storage
+          sudo rm -rf /var/lib/containers/storage /run/containers/storage
           sudo tee /etc/containers/storage.conf >/dev/null <<'EOF'
           [storage]
           driver = "overlay"
@@ -143,6 +134,15 @@ jobs:
             overlay) ;;
             *) echo "::error::containers are not on kernel overlayfs (fstype: '${fstype:-none}')" >&2; exit 1 ;;
           esac
+
+      - name: Mount Container Storage BTRFS Loopback
+        run: |
+          sudo truncate -s 70G /mnt/podman-storage.img
+          sudo mkfs.btrfs -f /mnt/podman-storage.img
+          sudo podman system reset --force
+          sudo systemctl stop podman.service
+          sudo mount -o compress-force=zstd:2 /mnt/podman-storage.img /var/lib/containers/storage
+          sudo systemctl start podman.service
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
