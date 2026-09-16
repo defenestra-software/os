@@ -15,7 +15,7 @@ dnf install -y --enable-repo=fedora-cisco-openh264 --allowerasing \
 cp -f /usr/share/icons/hicolor/scalable/places/defenestra-logo.svg \
     /usr/share/pixmaps/fedora-gdm-logo.png 2>/dev/null || true
 for f in fedora-logo.png fedora-logo-small.png fedora_logo_med.png \
-         fedora_whitelogo_med.png system-logo-white.png; do
+    fedora_whitelogo_med.png system-logo-white.png; do
     if [ -f /usr/share/icons/hicolor/256x256/apps/defenestra-logo-icon.png ]; then
         cp -f /usr/share/icons/hicolor/256x256/apps/defenestra-logo-icon.png \
             "/usr/share/pixmaps/$f"
@@ -27,17 +27,17 @@ dnf -y install \
     gnome-shell-extension-dash-to-panel \
     gnome-shell-extension-dash-to-dock \
     gnome-shell-extension-places-menu \
-    gnome-shell-extension-light-style \
-    || true
+    gnome-shell-extension-light-style ||
+    true
 
 mkdir -p /var/lib/rpm-state
 
 dnf install -qy --setopt=install_weak_deps=0 qrencode yad
 
-imageref="$(podman images --format '{{ index .Names 0 }}\n' 'defenestra*' | grep -v 'live-payload' | head -1)"
-imageref="${imageref##*://}"
-imageref="${imageref%%:*}"
-imagetag="$(podman images --format '{{ .Tag }}\n' "$imageref" | head -1)"
+: ${INSTALL_IMAGE_PAYLOAD:?}
+imageref="${INSTALL_IMAGE_PAYLOAD##*://}"
+imagetag="${imageref##*:}"
+imageref="${imageref%:*}"
 echo "Image ref: $imageref:$imagetag"
 sbkey='https://github.com/ublue-os/akmods/raw/main/certs/public_key.der'
 SECUREBOOT_KEY="/usr/share/ublue-os/sb_pubkey.der"
@@ -211,8 +211,8 @@ fi
 # Live session uses nouveau (proprietary driver init too risky pre-install).
 if [[ $imageref == *-nvidia* ]]; then
     dnf -yq install --allowerasing nvidia-gpu-firmware || :
-    dnf -yq --repo='fedora*,updates*' distro-sync --allowerasing mesa-vulkan-drivers \
-        || dnf -yq downgrade --allowerasing mesa-vulkan-drivers
+    dnf -yq --repo='fedora*,updates*' distro-sync --allowerasing mesa-vulkan-drivers ||
+        dnf -yq downgrade --allowerasing mesa-vulkan-drivers
     (
         shopt -u nullglob
         ls /usr/share/vulkan/icd.d/nouveau_icd.*.json >/dev/null
