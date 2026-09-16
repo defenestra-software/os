@@ -71,6 +71,8 @@ dnf5 -y install \
     cockpit \
     cockpit-ostree
 
+dnf5 -y install simple-scan
+
 # Security opt-ins ship installed but disabled, enabled per user/org policy.
 dnf5 -y install \
     usbguard \
@@ -111,7 +113,7 @@ mkdir -p /usr/share/factory/var/nix
 cp -a /nix/. /usr/share/factory/var/nix/
 rm -rf /nix/*
 
-# Fedora ships no SELinux policy for /nix. Determinate's nix.pp adds fcontext
+# Fedora has no SELinux policy for /nix. Determinate's nix.pp adds fcontext
 # rules for store/socket/profiles plus `allow init_t default_t:lnk_file read`
 # (init_t traverses symlinks during daemon socket activation; fcontext alone
 # misses this). Source .te/.fc shipped beside .pp for audit. Load from /ctx
@@ -309,6 +311,19 @@ systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
 systemctl enable defenestra-libvirtd-setup.service 2>/dev/null || true
 systemctl --global enable defenestra-dynamic-fixes.service 2>/dev/null || true
 systemctl --global enable defenestra-user-setup.service 2>/dev/null || true
+
+# Automatically add printers, DNS-SD only: the cups protocol is the
+# UDP/631 listener behind CVE-2024-47176.
+grep -qx 'BrowseRemoteProtocols none' /etc/cups/cups-browsed.conf
+sed -i 's/^BrowseRemoteProtocols none$/BrowseRemoteProtocols dnssd/' /etc/cups/cups-browsed.conf
+cat >>/etc/cups/cups-browsed.conf <<'EOF'
+
+# Use ColorModel=RGB for everywhere-PPD generator to avoid color printers
+# stuck in greyscale. Greyscale printers ignore this option
+CreateIPPPrinterQueues Driverless
+DefaultOptions ColorModel=RGB
+EOF
+systemctl enable cups-browsed.service 2>/dev/null || true
 
 # Deck-only units; harmless no-op on desktop variants.
 systemctl enable defenestra-tdpfix.service 2>/dev/null || true
