@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# defenestraOS: Nix profile pkg-config for fish. Toggle via `ujust enable-nix-dev`.
 # PKG_CONFIG_PATH is not a fish path-list, so keep it a single colon string.
 for d in \
     $HOME/.nix-profile/lib/pkgconfig $HOME/.nix-profile/share/pkgconfig \

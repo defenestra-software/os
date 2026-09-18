@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# defenestraOS post-rootfs hook for live ISO
 
 set -exo pipefail
 
@@ -64,12 +63,10 @@ curl -Lo /usr/share/ublue-os/sb_pubkey.der "$sbkey"
 
 cat <<EOF >>/usr/share/anaconda/interactive-defaults.ks
 
-# Create log directory
 %pre
 mkdir -p /tmp/anacoda_custom_logs
 %end
 
-# Check if there is a bitlocker partition and warn the user
 %pre --erroronfail --log=/tmp/anacoda_custom_logs/detect_bitlocker.log
 IS_BITLOCKER=\$(lsblk -o FSTYPE --json | jq '.blockdevices | map(select(.fstype == "BitLocker")) | . != []')
 { WARNING_MSG="\$(</dev/stdin)"; } << 'WARNINGEOF'
@@ -101,12 +98,10 @@ if [[ \$IS_BITLOCKER =~ true ]]; then
 fi
 %end
 
-# Remove the efi dir
 %pre-install --erroronfail
 rm -rf /mnt/sysroot/boot/efi/EFI/fedora
 %end
 
-# Relabel the boot partition
 %pre-install --erroronfail --log=/tmp/anacoda_custom_logs/repartitioning.log
 set -x
 xboot_dev=\$(findmnt -o SOURCE --nofsroot --noheadings -f --target /mnt/sysroot/boot)
@@ -117,7 +112,6 @@ fi
 e2label "\$xboot_dev" "defenestra_xboot"
 %end
 
-# Error dialog
 %onerror
 run0 --user=liveuser yad \
     --timeout=0 \
@@ -138,14 +132,14 @@ ostreecontainer --url=$imageref:$imagetag --transport=containers-storage --no-si
 
 EOF
 
-# Signed Images - switch to registry transport after install
+# Signed images: switch to registry transport after install.
 cat <<EOF >>/usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %post --erroronfail --log=/tmp/anacoda_custom_logs/bootc-switch.log
 bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry $imageref:$imagetag
 %end
 EOF
 
-# Enroll Secureboot Key
+# Enroll Secure Boot key.
 cat <<EOF >>/usr/share/anaconda/post-scripts/secureboot-enroll-key.ks
 %post --erroronfail --nochroot --log=/tmp/anacoda_custom_logs/secureboot-enroll-key.log
 set -oue pipefail
@@ -201,14 +195,14 @@ EOF
     done
 )
 
-# GTK apps fail to open on nvidia without GSK_RENDERER=gl in live session.
+# GTK apps fail to open on nvidia without GSK_RENDERER=gl in the live session.
 if [[ $imageref == *-nvidia* ]]; then
     mkdir -p /etc/environment.d /etc/skel/.config/environment.d
     echo "GSK_RENDERER=gl" >>/etc/environment.d/99-nvidia-fix.conf
     echo "GSK_RENDERER=gl" >>/etc/skel/.config/environment.d/99-nvidia-fix.conf
 fi
 
-# Live session uses nouveau (proprietary driver init too risky pre-install).
+# Live session uses nouveau (proprietary driver init is too risky pre-install).
 if [[ $imageref == *-nvidia* ]]; then
     dnf -yq install --allowerasing nvidia-gpu-firmware || :
     dnf -yq --repo='fedora*,updates*' distro-sync --allowerasing mesa-vulkan-drivers ||

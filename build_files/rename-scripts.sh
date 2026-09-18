@@ -14,7 +14,6 @@ rename_file() {
     fi
 }
 
-# /usr/libexec
 rename_file /usr/libexec/bazzite-user-setup           /usr/libexec/defenestra-user-setup
 rename_file /usr/libexec/bazzite-privileged-user-setup /usr/libexec/defenestra-privileged-user-setup
 rename_file /usr/libexec/bazzite-hardware-setup        /usr/libexec/defenestra-hardware-setup
@@ -26,36 +25,30 @@ rename_file /usr/libexec/bazzite-powersave             /usr/libexec/defenestra-p
 rename_file /usr/libexec/bazzite-snapper-config        /usr/libexec/defenestra-snapper-config
 rename_file /usr/libexec/bazzite-fetch-image           /usr/libexec/defenestra-fetch-image
 rename_file /usr/libexec/bazzite_detect_nvidia_support_status /usr/libexec/defenestra_detect_nvidia_support_status
-# Handheld
 rename_file /usr/libexec/bazzite-tdpfix                /usr/libexec/defenestra-tdpfix
 rename_file /usr/libexec/bazzite-autologin             /usr/libexec/defenestra-autologin
 
-# /usr/bin
 rename_file /usr/bin/bazzite-steam                     /usr/bin/defenestra-steam
 rename_file /usr/bin/bazzite-steam-bpm                 /usr/bin/defenestra-steam-bpm
 rename_file /usr/bin/bazzite-steam-brand               /usr/bin/defenestra-steam-brand
 rename_file /usr/bin/bazzite-rollback-helper            /usr/bin/defenestra-rollback-helper
 rename_file /usr/bin/bazzite-desktop-bootstrap         /usr/bin/defenestra-desktop-bootstrap
 
-# Branding videos arrive later. Inject early-exit so steam-brand is a no-op
-# until /usr/share/defenestra/steam-videos/ is populated.
+# steam-brand no-ops until /usr/share/defenestra/steam-videos/ exists.
 if [ -f /usr/bin/defenestra-steam-brand ]; then
     sed -i '2a\
 # defenestraOS: skip until startup/suspend videos are commissioned\
 [ -d /usr/share/defenestra/steam-videos ] || exit 0' /usr/bin/defenestra-steam-brand
 fi
 
-# systemd units
 rename_file /usr/lib/systemd/system/bazzite-hardware-setup.service   /usr/lib/systemd/system/defenestra-hardware-setup.service
 rename_file /usr/lib/systemd/system/bazzite-flatpak-manager.service  /usr/lib/systemd/system/defenestra-flatpak-manager.service
 rename_file /usr/lib/systemd/system/bazzite-libvirtd-setup.service   /usr/lib/systemd/system/defenestra-libvirtd-setup.service
 rename_file /usr/lib/systemd/user/bazzite-dynamic-fixes.service      /usr/lib/systemd/user/defenestra-dynamic-fixes.service
 rename_file /usr/lib/systemd/user/bazzite-user-setup.service         /usr/lib/systemd/user/defenestra-user-setup.service
-# Handheld
 rename_file /usr/lib/systemd/system/bazzite-tdpfix.service           /usr/lib/systemd/system/defenestra-tdpfix.service
 rename_file /usr/lib/systemd/system/bazzite-autologin.service        /usr/lib/systemd/system/defenestra-autologin.service
 
-# polkit policies
 rename_file /usr/share/polkit-1/actions/org.bazzite.privileged.user.setup.policy \
             /usr/share/polkit-1/actions/org.defenestra.privileged.user.setup.policy
 rename_file /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
@@ -67,24 +60,18 @@ rename_file /usr/share/polkit-1/actions/org.bazzite.rebase.policy \
 rename_file /usr/share/polkit-1/rules.d/bazzite-autologin.rules \
             /usr/share/polkit-1/rules.d/defenestra-autologin.rules
 
-
-# firefox configs
 rename_file /usr/share/ublue-os/firefox-config/01-bazzite-global.js  /usr/share/ublue-os/firefox-config/01-defenestra-global.js
 rename_file /usr/share/ublue-os/firefox-config/02-bazzite-nvidia.js  /usr/share/ublue-os/firefox-config/02-defenestra-nvidia.js
 rename_file /usr/share/ublue-os/firefox-config/03-bazzite-gnome.js   /usr/share/ublue-os/firefox-config/03-defenestra-gnome.js
 
-# profile scripts
 rename_file /etc/profile.d/bazzite-neofetch.sh /etc/profile.d/defenestra-fastfetch.sh
 rename_file /usr/share/fish/vendor_conf.d/bazzite-neofetch.fish /usr/share/fish/vendor_conf.d/defenestra-fastfetch.fish
 
-# desktop files
 rename_file /usr/share/applications/bazzite-steam-bpm.desktop /usr/share/applications/defenestra-steam-bpm.desktop
 rename_file /etc/xdg/autostart/bazzite-desktop-bootstrap.desktop /etc/xdg/autostart/defenestra-desktop-bootstrap.desktop
 
-# homebrew config
 rename_file /usr/share/ublue-os/homebrew/bazzite-cli.Brewfile /usr/share/ublue-os/homebrew/defenestra-cli.Brewfile
 
-# dconf database
 for f in /etc/dconf/db/distro.d/*bazzite*; do
     [ -f "$f" ] || continue
     newname="${f//bazzite/defenestra}"
@@ -99,7 +86,7 @@ for f in /etc/dconf/db/distro.d/locks/*bazzite*; do
     echo "  Renamed: $(basename "$f") → $(basename "$newname")"
 done
 
-# tuned profiles (cosmetic rename)
+# cosmetic rename
 for d in /usr/lib/tuned/profiles/*-bazzite*; do
     [ -d "$d" ] || continue
     newname="${d//bazzite/defenestra}"
@@ -108,7 +95,6 @@ for d in /usr/lib/tuned/profiles/*-bazzite*; do
 done
 
 # Targeted sed across known dirs only (avoids binary files in /usr/bin).
-# Catches ExecStart= paths, cross-references, polkit action IDs, etc.
 echo ":: Updating internal references (bazzite → defenestra)..."
 
 sed_dirs=(

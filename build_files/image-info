@@ -28,7 +28,7 @@ DEFAULT_HOSTNAME="${IMAGE_NAME}"
 CPE_NAME="cpe:/o:defenestra:defenestraos:$(rpm -E %fedora)"
 EOF
 
-# Symlink (some tools read /etc/os-release)
+# some tools read /etc/os-release
 ln -sf /usr/lib/os-release /etc/os-release
 
 mkdir -p /usr/share/ublue-os

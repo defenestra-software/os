@@ -1,5 +1,4 @@
 #!/bin/sh
-# Binds the PCI devices listed in the hyperpane.vfio= karg to vfio-pci
 
 type getargs > /dev/null 2>&1 || . /lib/dracut-lib.sh
 

@@ -1,8 +1,4 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# defenestraOS Tier 1 kernel hardening.
-# Memory + ASLR strengthening. Excludes sig_enforce (breaks akmods),
-# lockdown=confidentiality, nosmt (cuts CPU perf), and io_uring/BPF
-# restrictions (would break our shipped bpftrace/bcc + modern async I/O).
 
 kargs = [
   "init_on_alloc=1",

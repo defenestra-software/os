@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Swap bazzite kernel with vanilla Fedora kernel for secure boot compatibility
-# in the live ISO. The installed system will use the bazzite kernel.
+# Live ISO: uses stock Fedora kernel (secure boot).
+# Installed system keeps bazzite's kernel
 
 set -exo pipefail
 
@@ -21,6 +21,6 @@ dnf -y --repo fedora,updates --setopt=tsflags=noscripts install kernel kernel-co
 kernel=$(find /usr/lib/modules -maxdepth 1 -type d -printf '%P\n' | grep .)
 depmod "$kernel"
 
-# Include nvidia-gpu-firmware for broad hardware support in live session
+# live session needs nvidia-gpu-firmware
 dnf install -yq nvidia-gpu-firmware || :
 dnf clean all -yq

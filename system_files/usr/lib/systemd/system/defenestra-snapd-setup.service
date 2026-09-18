@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 [Unit]
 Description=One-time snapd configuration for defenestraOS
-# snap-confine refuses homes outside /home. refresh.hold keeps auto-refresh
-# off so the Store drives updates.
+# snap-confine refuses homes outside /home.
+# Refresh.hold set and the Store managages updates.
 After=snapd.socket snapd.service
 Requires=snapd.socket
 ConditionPathExists=!/var/lib/defenestra/.snapd-setup

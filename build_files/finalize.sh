@@ -14,9 +14,6 @@ fi
 
 dconf update 2>/dev/null || true
 
-# BIB validates GPG keys on every repo it reads, even disabled ones. Bazzite
-# ships repos with stale keys (terra-mesa, rpmfusion wrong releasever) that
-# fail BIB. Disable all non-Fedora repos; packages are already installed.
 for repo in /etc/yum.repos.d/*.repo; do
     case "$(basename "$repo")" in
     fedora.repo | fedora-updates.repo | fedora-updates-archive.repo)
@@ -27,7 +24,7 @@ for repo in /etc/yum.repos.d/*.repo; do
     esac
 done
 
-# Rebuild initramfs to embed plymouth branding.
+# Embed plymouth branding.
 QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' kernel)"
 echo ":: Rebuilding initramfs for kernel ${QUALIFIED_KERNEL}..."
 /usr/bin/dracut \
@@ -43,7 +40,6 @@ chmod 0600 "/usr/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
 
 dnf5 clean all
 
-# Verify rpmdb
 python3 - <<'PY'
 import sqlite3, sys
 db = sqlite3.connect("file:/usr/share/rpm/rpmdb.sqlite?mode=ro", uri=True)

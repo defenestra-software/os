@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Lock GNOME Software updates (we use our own update mechanism)
+# GNOME Software updates locked; Store handles updates.
 /org/gnome/software/allow-updates
 /org/gnome/software/download-updates
 /org/gnome/software/download-updates-notify

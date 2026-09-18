@@ -1,7 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Symlink OS-critical /usr/bin names into /usr/lib/defenestra/protected.
 # A layer's util-linux must not drive mounts on composefs.
 set -euo pipefail
 
@@ -14,17 +13,15 @@ PROTECTED_PKGS=(
     shadow-utils
     sudo
 
-    # protect dbus
     dbus-daemon
     dbus-tools
     dbus-x11
     glib2
 
-    # fusermount3 has to have setuid so protect it
+    # fusermount3 is setuid
     fuse3
 
-    # brew python3 has no gi/dnf5; fontconfig/mime/appstream caches must match
-    # the system libraries that read them.
+    # brew python3 has no gi/dnf5; fontconfig/mime/appstream caches must match the system libs.
     python3
     fontconfig
     shared-mime-info
@@ -51,7 +48,7 @@ for pkg in "${PROTECTED_PKGS[@]}"; do
     done < <(rpm -ql "${pkg}" | grep -E '^/usr/bin/[^/]+$' || true)
 done
 
-# brew's own bin/brew would break ownership. use our wrapper /usr/bin/brew
+# brew's own bin/brew would break ownership; pin the wrapper.
 ln -sfn /usr/libexec/defenestra-brew-wrapper "${PROTECTED_DIR}/brew"
 
 echo ":: protected-path: ${count} names pinned in ${PROTECTED_DIR} (+ brew wrapper)"

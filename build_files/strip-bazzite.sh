@@ -9,7 +9,6 @@ dnf5 remove -y --noautoremove bazaar
 dnf5 remove -y --noautoremove bazzite-portal
 dnf5 remove -y --noautoremove webapp-manager
 
-# Remove bazzite-updater
 dnf5 remove -y --noautoremove bazzite-updater
 rm -f /usr/share/ublue-os/just/93-bazzite-update.just
 sed -i '\|/usr/share/ublue-os/just/93-bazzite-update.just|d' /usr/share/ublue-os/justfile
@@ -31,8 +30,7 @@ rm -f /usr/bin/bruh
 
 rm -rf /usr/share/ublue-os/bazaar/
 
-# Bazzite-only wallpaper branding. ublue.png/ublue.xml kept (base lineage).
-# Steam Deck branding dropped to avoid potential Valve trademark/copyright issue.
+# Steam Deck branding: Valve trademark/copyright. ublue.png/ublue.xml stay (base lineage).
 dnf5 remove -y --noautoremove steamdeck-backgrounds
 rm -rf /usr/share/backgrounds/steamdeck/
 rm -rf /usr/share/backgrounds/convergence /usr/share/backgrounds/convergence.jxl /usr/share/backgrounds/convergence-dynamic.xml
@@ -56,11 +54,8 @@ fi
 
 rm -f /etc/dconf/db/distro.d/10-bazzite-deck-silverblue-logomenu 2>/dev/null || true
 
-# Bazzite ships a patched bluez git snapshot. Their 5.87 build (git.7950.
-# 32d2ebd9.dirty) segfaults in device_found_callback on every LE discovery
-# result, killing bluetoothd and with it Web Bluetooth. Sync back to stock
-# Fedora bluez; drop this once bazzite's bluez stops crashing (test: any
-# BLE scan with an advertising device nearby, then coredumpctl list bluetoothd).
+# Bazzite's bluez 5.87 (git.7950.32d2ebd9.dirty) segfaults in device_found_callback
+# on LE discovery. Drop this distro-sync once their build stops crashing.
 dnf5 versionlock delete bluez bluez-libs bluez-obexd bluez-cups
 dnf5 -y distro-sync --repo=fedora --repo=updates 'bluez*'
 if rpm -q bluez | grep -q bazzite; then
@@ -68,15 +63,14 @@ if rpm -q bluez | grep -q bazzite; then
       exit 1
 fi
 
-# Our overrides ship via system_files overlay.
+# Overrides ship via system_files overlay.
 rm -f /usr/share/glib-2.0/schemas/zz0-*bazzite*.gschema.override 2>/dev/null || true
 
 if [ -f /etc/xdg/mimeapps.list ]; then
       sed -i '/bazaar/d' /etc/xdg/mimeapps.list
 fi
 
-# Disable originals so they don't conflict during rename. install-defenestra.sh
-# re-enables them under the new names.
+# Disable before rename; install-defenestra.sh re-enables the new names.
 systemctl disable bazzite-flatpak-manager.service 2>/dev/null || true
 systemctl disable bazzite-hardware-setup.service 2>/dev/null || true
 systemctl disable bazzite-libvirtd-setup.service 2>/dev/null || true

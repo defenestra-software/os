@@ -1,13 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # shellcheck shell=sh
-# Put Nix profile bin on PATH for login shells (TTY, SSH).
-# systemd --user gets the same via /usr/lib/environment.d/90-defenestra-nix.conf.
-# Fedora's /etc/profile.d/nix.sh handles NIX_PROFILES + man path; we extend it.
+# systemd --user gets the same via environment.d/90-defenestra-nix.conf.
+# Fedora's /etc/profile.d/nix.sh handles NIX_PROFILES + man path; this extends it.
 
 if [ -d /nix/var/nix/profiles/default ]; then
-    # Guard on the user marker (~/.nix-profile/bin) too: environment.d emits it
-    # first for the systemd user session, so a login shell in a graphical login
-    # must be a no-op here to avoid duplicate entries.
+    # environment.d already prepended ~/.nix-profile/bin for graphical login.
     case ":${PATH}:" in
         *":${HOME}/.nix-profile/bin:"*) ;;
         *":/nix/var/nix/profiles/default/bin:"*) ;;
@@ -15,7 +12,6 @@ if [ -d /nix/var/nix/profiles/default ]; then
     esac
     export PATH
 
-    # Allow unfree packages by default
     export NIXPKGS_ALLOW_UNFREE=1
 fi
 

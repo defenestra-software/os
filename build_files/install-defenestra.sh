@@ -11,7 +11,6 @@ dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd \
     snapd
 dnf5 -y copr disable defenestra/defenestra
 
-# Defenestra hosted repository
 install -Dm644 /ctx/system_files/etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra \
     /etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra
 install -Dm644 /ctx/system_files/etc/yum.repos.d/defenestra.repo \
@@ -30,10 +29,7 @@ dnf5 -y install gnome-initial-setup
 
 dnf5 -y install zsh
 
-# Brew is owned by the linuxbrew system user (UID < 1000 hides it from
-# gnome-initial-setup). /usr/libexec/defenestra-brew-wrapper routes through
-# `sudo -u linuxbrew` so the prefix has one stable owner; wheel-only via
-# sudoers.d/defenestra-brew.
+# linuxbrew UID < 1000: gnome-initial-setup hides system users.
 # Mask upstream brew-* units; defenestra-brew-* own the lifecycle as linuxbrew.
 systemd-sysusers /ctx/system_files/usr/lib/sysusers.d/defenestra-linuxbrew.conf
 systemctl mask brew-setup.service brew-update.service brew-update.timer \
@@ -41,14 +37,21 @@ systemctl mask brew-setup.service brew-update.service brew-update.timer \
 
 dnf5 -y install toolbox
 
-# Bazzite's mesa-libOpenCL conflicts with ROCm's OpenCL ICD.
-# install_weak_deps=False keeps only compute libs, skips test/debug recommends.
+# mesa-libOpenCL conflicts with ROCm's OpenCL ICD.
+# install_weak_deps=False keeps compute libs, skips test/debug recommends.
 dnf5 -y remove mesa-libOpenCL
 dnf5 -y --setopt=install_weak_deps=False install \
-    rocm-hip \
     rocm-opencl \
     rocm-clinfo \
-    rocm-smi
+    rocm-smi \
+    rocminfo
+
+dnf5 -y --setopt=install_weak_deps=False install \
+    intel-compute-runtime \
+    oneapi-level-zero \
+    intel-level-zero-gpu-raytracing \
+    intel-npu-driver \
+    igt-gpu-tools
 
 dnf5 -y install \
     bpftrace \
@@ -73,7 +76,7 @@ dnf5 -y install \
 
 dnf5 -y install simple-scan
 
-# Security opt-ins ship installed but disabled, enabled per user/org policy.
+# Installed, off by default; enabled per user/org policy.
 dnf5 -y install \
     usbguard \
     usbguard-notifier \
@@ -106,25 +109,19 @@ dnf5 -y install --enable-repo="docker-ce-stable" "${docker_pkgs[@]}"
 mkdir -p /etc/modules-load.d
 echo iptable_nat >/etc/modules-load.d/defenestra-docker.conf
 
-# F44 nix-daemon ships multi-user systemd units. /var/nix holds the store;
-# bound onto /nix via nix.mount at boot.
+# Store in /var/nix; nix.mount binds it onto /nix at boot.
 dnf5 -y install nix nix-daemon busybox
 mkdir -p /usr/share/factory/var/nix
 cp -a /nix/. /usr/share/factory/var/nix/
 rm -rf /nix/*
 
-# Fedora has no SELinux policy for /nix. Determinate's nix.pp adds fcontext
-# rules for store/socket/profiles plus `allow init_t default_t:lnk_file read`
-# (init_t traverses symlinks during daemon socket activation; fcontext alone
-# misses this). Source .te/.fc shipped beside .pp for audit. Load from /ctx
-# since system_files overlay runs later.
+# Fedora has no /nix SELinux policy; nix.pp also allows init_t to read default_t
+# lnk_file (socket activation traverses the store symlink). Load from /ctx: overlay runs later.
 semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
-# Authoritative relabel happens on first boot via defenestra-nix-store-relabel
-# once /var/nix is bind-mounted at /nix. This pass clears RPM-inherited
-# contexts on the factory copy.
+# Factory copy only; first-boot defenestra-nix-store-relabel relabels the live store.
 restorecon -RF /usr/share/factory/var/nix
 
-# Installed, off by default. Classic snaps use hardcoded /snap
+# Off by default. Classic snaps hardcode /snap.
 dnf5 -y install snapd
 if ! rpm -q --qf '%{RELEASE}\n' snapd | grep -q defenestra; then
     echo "!! snapd $(rpm -q snapd) is not the patched defenestra build" >&2
@@ -157,9 +154,7 @@ dnf5 -y install \
     davfs2 \
     nfs4-acl-tools
 
-# Bazzite's build strips file caps from SSSD helpers, breaking LDAP/Kerberos
-# on atomic desktops. Kinoite with the same SSSD works fine, confirming this
-# is a build artifact. See ublue-os/bazzite#1818.
+# Bazzite strips file caps from SSSD helpers (LDAP/Kerberos). See ublue-os/bazzite#1818.
 if [ -f /usr/libexec/sssd/krb5_child ]; then
     setcap cap_chown,cap_dac_override,cap_setgid,cap_setuid=ep /usr/libexec/sssd/krb5_child
     setcap cap_chown,cap_dac_override,cap_setgid,cap_setuid=ep /usr/libexec/sssd/ldap_child
@@ -171,7 +166,7 @@ flatpak remote-add --if-not-exists --from defenestra \
     https://my.defenestra.io/downloads/defenestra.flatpakrepo
 
 if [ -d /ctx/system_files ] && [ "$(ls -A /ctx/system_files 2>/dev/null)" ]; then
-    # Extensions handled below; nvidia overlay is conditional.
+    # nvidia overlay is conditional; extensions handled below.
     rsync -av --exclude='usr/share/gnome-shell/extensions' --exclude='nvidia' /ctx/system_files/ /
     echo ":: System files overlaid."
 
@@ -207,8 +202,7 @@ if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
     fi
 fi
 
-# ArcMenu ships src/ + data/ + schemas/ in subdirs; flatten src/ to root and
-# compile the gresource bundle.
+# ArcMenu ships src/ nested; flatten to the extension root.
 if [ -d "${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com" ]; then
     ARCMENU_SRC="${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com"
     ARCMENU_DST="${BUNDLED_EXT_DST}/arcmenu@arcmenu.com"
@@ -255,7 +249,6 @@ fi
 
 dnf5 -y remove glib2-devel
 
-# Download tilingshell from EGO
 command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
 TILINGSHELL_EGO_VERSION="76"
 TILINGSHELL_SHA256="0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35"
@@ -268,12 +261,9 @@ mkdir -p "${TILINGSHELL_DST}"
 unzip -q -o "${TILINGSHELL_TMP}/ts.zip" -d "${TILINGSHELL_DST}"
 rm -rf "${TILINGSHELL_TMP}"
 
-# Build the curated /run/opengl-driver/{lib,lib32} backing directory
 /ctx/build_files/curate-gl-libs.sh
 
-# Pin the nixpkgs rev that defenestra-opengl-provision fetches Mesa from, so every
-# machine off this image gets the identical, image-tested Mesa instead of whatever
-# unstable happens to be on its first-boot day.
+# Pin nixpkgs rev for defenestra-opengl-provision; first-boot must not float on unstable.
 mkdir -p /usr/share/defenestra
 curl -fsSL https://channels.nixos.org/nixpkgs-unstable/git-revision \
     >/usr/share/defenestra/opengl-nixpkgs-rev
@@ -282,11 +272,9 @@ systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
-# NSS bridge: lets Nix-built binaries resolve host sssd/FreeIPA identities.
+# nsncd: Nix binaries resolve host sssd/FreeIPA identities.
 systemctl enable nsncd.service 2>/dev/null || true
-# Hybrid GL: first-boot fetch of a nix-built Mesa (glibc-consistent) and
-# per-boot compose for /run/opengl-driver so nix GL/Vulkan apps stop
-# breaking when Fedora's glibc outpaces the nix channel's. NVIDIA stays host.
+# NVIDIA stays host; nix GL/Vulkan uses the provisioned Mesa (Fedora glibc outpaces nix).
 systemctl enable defenestra-opengl-provision.service 2>/dev/null || true
 systemctl enable defenestra-opengl-compose.service 2>/dev/null || true
 
@@ -298,7 +286,7 @@ systemctl enable defenestra-brew-setup.service 2>/dev/null || true
 systemctl enable store-system.service 2>/dev/null || true
 systemctl --global enable store-user.service 2>/dev/null || true
 
-# The Store updates all software including the OS image and installed apps
+# Store owns OS and app updates.
 for unit in \
     uupd.timer \
     bootc-fetch-apply-updates.timer \
@@ -312,14 +300,12 @@ systemctl enable defenestra-libvirtd-setup.service 2>/dev/null || true
 systemctl --global enable defenestra-dynamic-fixes.service 2>/dev/null || true
 systemctl --global enable defenestra-user-setup.service 2>/dev/null || true
 
-# Automatically add printers, DNS-SD only: the cups protocol is the
-# UDP/631 listener behind CVE-2024-47176.
+# DNS-SD only: cups (UDP/631) is CVE-2024-47176.
 grep -qx 'BrowseRemoteProtocols none' /etc/cups/cups-browsed.conf
 sed -i 's/^BrowseRemoteProtocols none$/BrowseRemoteProtocols dnssd/' /etc/cups/cups-browsed.conf
 cat >>/etc/cups/cups-browsed.conf <<'EOF'
 
-# Use ColorModel=RGB for everywhere-PPD generator to avoid color printers
-# stuck in greyscale. Greyscale printers ignore this option
+# ColorModel=RGB so everywhere-PPD color printers aren't stuck greyscale.
 CreateIPPPrinterQueues Driverless
 DefaultOptions ColorModel=RGB
 EOF
