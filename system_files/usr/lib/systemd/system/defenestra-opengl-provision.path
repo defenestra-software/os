@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# First nix profile generation provisions GPU drivers without a reboot.
+# Profiles register as GC roots here.
+[Unit]
+Description=Provision Nix GPU drivers when a nix profile changes
+After=nix.mount
+RequiresMountsFor=/nix
+
+[Path]
+PathChanged=/nix/var/nix/gcroots/auto
+PathChanged=/nix/var/nix/profiles/per-user
+PathChanged=/nix/var/nix/profiles/per-user/root
+Unit=defenestra-opengl-provision.service
+
+[Install]
+WantedBy=paths.target

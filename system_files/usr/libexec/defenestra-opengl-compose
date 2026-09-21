@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
+# Lay out /run/opengl-driver{,-32} the way nixpkgs expects, from what
+# defenestra-opengl-provision fetched.
 
 set -euo pipefail
 shopt -s nullglob
 
-link() { [ -e "$1" ] && ln -sfn "$1" "$2/$(basename "$1")"; return 0; }
+dest=/var/lib/defenestra/opengl
+
+link() {
+    [ -e "$1" ] && ln -sfn "$1" "$2/$(basename "$1")"
+    return 0
+}
 
 swap() {
     local final="$1" target="$2" tmp
@@ -16,32 +23,45 @@ swap() {
 }
 
 compose_arch() {
-    local root="$1" mesa_root="$2"
-    [ -d "$root" ] || return 0
-    local mesa j d
-    mesa="$(readlink -f "$mesa_root" 2>/dev/null || true)"
-    { [ -n "$mesa" ] && [ -d "$mesa/lib" ]; } || return 0
-
+    local root="$1" lib="$2" driver_root="$3" nvidia="$4" driver j d
     mkdir -p "$root/share/glvnd"
+    driver="$(readlink -f "$driver_root" 2>/dev/null || true)"
+    if [ ! -d "$lib" ] || [ -z "$driver" ] || [ ! -d "$driver/lib" ]; then
+        rm -rf "${root:?}/lib" "$root/share/glvnd/egl_vendor.d" "$root/share/vulkan"
+        return 0
+    fi
+    swap "$root/lib" "$lib"
+
+    # Absolute paths: nix libEGL's RUNPATH doesn't include /run/opengl-driver/lib.
     local egl_gen="$root/share/glvnd/egl_vendor.d.$$"
-    rm -rf "$egl_gen"; mkdir -p "$egl_gen"
-    for j in "$mesa"/share/glvnd/egl_vendor.d/*.json; do link "$j" "$egl_gen"; done
-    for j in /usr/share/glvnd/egl_vendor.d/*.json; do
-        [ -e "$egl_gen/$(basename "$j")" ] || link "$j" "$egl_gen"
-    done
+    rm -rf "$egl_gen"
+    mkdir -p "$egl_gen"
+    for j in "$driver"/share/glvnd/egl_vendor.d/*.json; do link "$j" "$egl_gen"; done
+    if [ "$nvidia" = 1 ]; then
+        printf '{ "file_format_version" : "1.0.0", "ICD" : { "library_path" : "%s" } }\n' \
+            "$root/lib/libEGL_nvidia.so.0" >"$egl_gen/10_nvidia.json"
+    fi
     swap "$root/share/glvnd/egl_vendor.d" "egl_vendor.d.$$"
 
     local vk_gen="$root/share/vulkan.$$"
-    rm -rf "$vk_gen"; mkdir -p "$vk_gen/icd.d"
-    for d in /usr/share/vulkan/*; do
-        [ "$(basename "$d")" = icd.d ] && continue
-        link "$d" "$vk_gen"
+    rm -rf "$vk_gen"
+    mkdir -p "$vk_gen/icd.d"
+    for j in "$driver"/share/vulkan/icd.d/*.json; do link "$j" "$vk_gen/icd.d"; done
+    # Mesa's layers, device_select first: it puts the GPU driving the display first.
+    for d in implicit_layer.d explicit_layer.d; do
+        [ -d "$driver/share/vulkan/$d" ] && link "$driver/share/vulkan/$d" "$vk_gen"
     done
-    for j in /usr/share/vulkan/icd.d/*.json; do
-        grep -q '"library_path"[[:space:]]*:[[:space:]]*"[^"]*libvulkan_' "$j" && continue
-        link "$j" "$vk_gen/icd.d"
-    done
-    for j in "$mesa"/share/vulkan/icd.d/*.json; do link "$j" "$vk_gen/icd.d"; done
+    if [ "$nvidia" = 1 ]; then
+        # Nix loader doesn't scan /etc/vulkan/icd.d, where the host NVIDIA ICD is located
+        local api="" icd
+        for icd in /etc/vulkan/icd.d/nvidia_icd.json /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json; do
+            [ -e "$icd" ] || continue
+            api="$(sed -nE 's/.*"api_version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$icd")"
+            break
+        done
+        printf '{ "file_format_version" : "1.0.1", "ICD" : { "library_path" : "%s", "api_version" : "%s" } }\n' \
+            "$root/lib/libGLX_nvidia.so.0" "${api:-1.4.0}" >"$vk_gen/icd.d/nvidia_icd.x86_64.json"
+    fi
     swap "$root/share/vulkan" "vulkan.$$"
 
     # Drop generations left by earlier composes this boot.
@@ -53,5 +73,27 @@ compose_arch() {
     done
 }
 
-compose_arch /run/opengl-driver    /var/lib/defenestra/opengl/mesa
-compose_arch /run/opengl-driver-32 /var/lib/defenestra/opengl/mesa32
+# Patched NVIDIA only when it matches this image's driver; after an update it's
+# becomes invalid until provision rebuilds, so it falls back to Mesa.
+# libnvidia-glcore's name contains the driver version; libGLX_nvidia's doesn't
+# (this image links libGLX_nvidia.so.<ver> -> libGLX_nvidia.so.0).
+nvidia_version() {
+    local f
+    for f in /usr/lib64/libnvidia-glcore.so.*; do
+        echo "${f##*.so.}"
+        return 0
+    done
+    return 1
+}
+
+nvidia=0
+lib64="$dest/driver/lib"
+if [ -e /usr/lib64/libGLX_nvidia.so.0 ] && ver="$(nvidia_version)"; then
+    if [ -e "$dest/nvidia-$ver/lib/libGLX_nvidia.so.0" ]; then
+        nvidia=1
+        lib64="$dest/nvidia-$ver/lib"
+    fi
+fi
+
+compose_arch /run/opengl-driver "$lib64" "$dest/driver" "$nvidia"
+compose_arch /run/opengl-driver-32 "$dest/mesa32/lib" "$dest/mesa32" 0

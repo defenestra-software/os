@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 [Unit]
-Description=Provision Nix Mesa for hybrid GL/Vulkan
+Description=Provision Nix GPU drivers for /run/opengl-driver
 Wants=network-online.target nix-daemon.service
 After=network-online.target nix-daemon.service nix.mount defenestra-nix-reseed.service
 RequiresMountsFor=/nix /var
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
+# Path unit re-runs this on profile changes; RemainAfterExit would block that.
 ExecStart=/usr/libexec/defenestra-opengl-provision
 
 [Install]

@@ -1,13 +1,29 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Fetch a Nix-built Mesa so nix GL/Vulkan apps get a driver built against the nix
-# channel's glibc.
+# Provision /run/opengl-driver for nix: Nix-built Mesa (Fedora's glibc
+# commonly gets ahead of nix) and, on NVIDIA images, host NVIDIA libs with
+# DT_RPATH so they resolve without the host ld.so.cache.
 
 set -euo pipefail
+shopt -s nullglob
 
 dest=/var/lib/defenestra/opengl
-mkdir -p "$dest"
+
+# A generation under the profile GC roots means nix is in use.
+nix_in_use() {
+    local r t
+    for r in /nix/var/nix/gcroots/auto/*; do
+        t="$(readlink "$r")" || continue
+        case "$t" in */nix/profiles/*-link) [ -e "$t" ] && return 0 ;; esac
+    done
+    for r in /nix/var/nix/profiles/per-user/*/*-link; do return 0; done
+    return 1
+}
+if ! nix_in_use; then
+    echo ":: no nix profile on this machine, nothing to provision"
+    exit 0
+fi
 
 # Pin to the nixpkgs rev captured at image build (opengl-nixpkgs-rev) so every
 # machine off an image gets the identical Mesa
@@ -15,19 +31,126 @@ rev="$(cat /usr/share/defenestra/opengl-nixpkgs-rev 2>/dev/null || true)"
 ref="nixpkgs"
 [ -n "$rev" ] && ref="github:NixOS/nixpkgs/$rev"
 
+nvidia_version() {
+    local f
+    for f in /usr/lib64/libnvidia-glcore.so.*; do
+        echo "${f##*.so.}"
+        return 0
+    done
+    return 1
+}
+nvidia_ver=""
+[ -e /usr/lib64/libGLX_nvidia.so.0 ] && nvidia_ver="$(nvidia_version || true)"
+has_intel_gpu() {
+    local v
+    for v in /sys/class/drm/card[0-9]*/device/vendor; do
+        [ "$(cat "$v")" = 0x8086 ] && return 0
+    done
+    return 1
+}
+intel=""
+has_intel_gpu && intel=1
+
+stamp="$rev${intel:+ intel}${nvidia_ver:+ nvidia-$nvidia_ver}"
+
 # Skip when already provisioned
-if [ -e "$dest/mesa/lib" ] && [ -e "$dest/mesa32/lib" ] \
-   && { [ -z "$rev" ] || [ "$rev" = "$(cat "$dest/.rev" 2>/dev/null || true)" ]; }; then
+if [ -e "$dest/driver/lib" ] && [ -e "$dest/mesa32/lib" ] &&
+    { [ -z "$nvidia_ver" ] || [ -e "$dest/nvidia-$nvidia_ver/lib/libGLX_nvidia.so.0" ]; } &&
+    { [ -z "$rev" ] || [ "$stamp" = "$(cat "$dest/.stamp" 2>/dev/null || true)" ]; }; then
     exit 0
 fi
 
-# mesa.out carries the egl_vendor.d + vulkan ICD descriptors compose links into
-# /run/opengl-driver{,-32}/share; i686 covers 32-bit nix GL apps.
+mkdir -p "$dest"
 nixflags=(--refresh --extra-experimental-features 'nix-command flakes')
-nix build "${nixflags[@]}" --out-link "$dest/mesa"   "$ref#mesa"
+nix build "${nixflags[@]}" --impure --out-link "$dest/driver" --expr "
+    let p = (builtins.getFlake \"$ref\").legacyPackages.x86_64-linux; in
+    p.buildEnv {
+        name = \"defenestra-opengl-driver\";
+        paths = [ p.mesa ]${intel:+ ++ [ p.intel-media-driver ]};
+    }"
 nix build "${nixflags[@]}" --out-link "$dest/mesa32" "$ref#pkgsi686Linux.mesa"
+rm -f "$dest/mesa"
 
-printf '%s\n' "$rev" > "$dest/.rev"
+# NVIDIA blobs have no RUNPATH and nix's glibc ignores the host ld.so.cache.
+# DT_RPATH=$ORIGIN:<nix-built deps> on copies so nix can resolve them.
+provision_nvidia() {
+    local driver out tmp pe deps l soname f
+    driver="$(readlink -f "$dest/driver")"
+    out="$dest/nvidia-$nvidia_ver"
+    tmp="$out.tmp.$$"
 
-# Recompose /run against the freshly-fetched Mesa without waiting for next boot.
+    # patchelf 0.15 corrupts the small NVIDIA libs (segfault in _init); 0.18 doesn't.
+    nix build "${nixflags[@]}" --out-link "$dest/patchelf" "$ref#patchelfUnstable"
+    pe="$dest/patchelf/bin/patchelf"
+    nix build "${nixflags[@]}" --impure --out-link "$dest/nvidia-deps" --expr "
+        let p = (builtins.getFlake \"$ref\").legacyPackages.x86_64-linux; in
+        p.symlinkJoin {
+            name = \"defenestra-nvidia-deps\";
+            # libglvnd: the Vulkan driver dlopens libEGL.so.1 when there's no X display.
+            paths = with p; [ libx11 libxext libxcb wayland libdrm libgbm libglvnd expat libffi libxau libxdmcp stdenv.cc.cc.lib ];
+        }"
+    deps="$(readlink -f "$dest/nvidia-deps")/lib"
+
+    rm -rf "$tmp"
+    mkdir -p "$tmp/lib/gbm" "$tmp/lib/vdpau"
+
+    # nix Mesa underneath (GLX/EGL for other GPUs, dri, gbm), NVIDIA over it.
+    for f in "$driver"/lib/*; do
+        case "$(basename "$f")" in gbm) continue ;; esac
+        ln -s "$f" "$tmp/lib/"
+    done
+    for f in "$driver"/lib/gbm/*; do ln -s "$f" "$tmp/lib/gbm/"; done
+
+    # Patch the libs non-NVIDIA code loads plus every NVIDIA lib with non-glibc
+    # needed entries: glibc follows the loader chain's RPATH for needed loads,
+    # but not for libs NVIDIA dlopens (EGL platform plugins, eglcore, ...).
+    local entries=" libGLX_nvidia.so.0 libEGL_nvidia.so.0 libGLESv2_nvidia.so.2 libGLESv1_CM_nvidia.so.1
+        libnvidia-allocator.so.1 libnvidia-ml.so.1 libnvcuvid.so.1 libnvidia-encode.so.1 libnvidia-fbc.so.1
+        libnvidia-opticalflow.so.1 libnvidia-api.so.1 libnvidia-ngx.so.1 "
+    entries=" $(printf '%s ' $entries)"
+    cd /usr/lib64
+    for l in libGLX_nvidia.so.* libEGL_nvidia.so.* libGLESv1_CM_nvidia.so.* libGLESv2_nvidia.so.* \
+        libnvidia-*.so.* libcuda.so.* libnvcuvid.so.* libnvoptix*.so.*; do
+        # nvidia-settings, container toolkit and pkcs11 helpers: not GPU runtime,
+        # and they pull GTK/OpenSSL/seccomp.
+        case "$l" in libnvidia-gtk3* | libnvidia-wayland-client* | libnvidia-container* | libnvidia-pkcs11*) continue ;; esac
+        [ -e "$tmp/lib/$l" ] && continue
+        if [[ "$entries" == *" $l "* ]] || objdump -p "$l" | awk '/NEEDED/{print $2}' |
+            grep -vE '^(libc|libm|libdl|libpthread|librt|ld-linux-x86-64)\.so' >/dev/null; then
+            soname="$(objdump -p "$l" | awk '/SONAME/{print $2}')"
+            soname="${soname:-$l}"
+            if [ ! -e "$tmp/lib/$soname" ]; then
+                cp -L "$l" "$tmp/lib/$soname"
+                chmod u+w "$tmp/lib/$soname"
+                "$pe" --force-rpath --set-rpath "\$ORIGIN:\$ORIGIN/..:$deps" "$tmp/lib/$soname"
+            fi
+            [ "$l" = "$soname" ] || ln -sfn "$soname" "$tmp/lib/$l"
+        else
+            ln -s "/usr/lib64/$l" "$tmp/lib/$l"
+        fi
+    done
+    cd - >/dev/null
+
+    # nix libgbm's backend dir is /run/opengl-driver/lib/gbm. Symlink: two copies
+    # of one NVIDIA lib in a process crash.
+    ln -s ../libnvidia-allocator.so.1 "$tmp/lib/gbm/nvidia-drm_gbm.so"
+    # Fedora keeps the VDPAU driver in /usr/lib64/vdpau; nix libvdpau reads lib/vdpau
+    if [ -e /usr/lib64/vdpau/libvdpau_nvidia.so.1 ]; then
+        cp -L /usr/lib64/vdpau/libvdpau_nvidia.so.1 "$tmp/lib/vdpau/"
+        chmod u+w "$tmp/lib/vdpau/libvdpau_nvidia.so.1"
+        "$pe" --force-rpath --set-rpath "\$ORIGIN/..:$deps" "$tmp/lib/vdpau/libvdpau_nvidia.so.1"
+    fi
+
+    rm -rf "$out"
+    mv -T "$tmp" "$out"
+    for f in "$dest"/nvidia-[0-9]*; do
+        [ "$f" = "$out" ] || rm -rf "$f"
+    done
+}
+[ -n "$nvidia_ver" ] && provision_nvidia
+
+printf '%s\n' "$stamp" >"$dest/.stamp"
+rm -f "$dest/.rev"
+
+# Recompose /run without waiting for next boot.
 systemctl start defenestra-opengl-compose.service

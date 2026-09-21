@@ -261,7 +261,14 @@ mkdir -p "${TILINGSHELL_DST}"
 unzip -q -o "${TILINGSHELL_TMP}/ts.zip" -d "${TILINGSHELL_DST}"
 rm -rf "${TILINGSHELL_TMP}"
 
-/ctx/build_files/curate-gl-libs.sh
+# NVIDIA Vulkan ICD in /etc/vulkan/icd.d with a bare soname. Two copies of
+# libGLX_nvidia in one process segfault in glcore.
+if [ -e /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json ]; then
+    mkdir -p /etc/vulkan/icd.d
+    sed -E 's|("library_path"[[:space:]]*:[[:space:]]*")[^"]*libGLX_nvidia\.so\.0"|\1libGLX_nvidia.so.0"|' \
+        /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json >/etc/vulkan/icd.d/nvidia_icd.json
+    rm -f /usr/share/vulkan/icd.d/nvidia_icd.*.json
+fi
 
 # Pin nixpkgs rev for defenestra-opengl-provision; first-boot must not float on unstable.
 mkdir -p /usr/share/defenestra
@@ -274,8 +281,8 @@ systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
 # nsncd: Nix binaries resolve host sssd/FreeIPA identities.
 systemctl enable nsncd.service 2>/dev/null || true
-# NVIDIA stays host; nix GL/Vulkan uses the provisioned Mesa (Fedora glibc outpaces nix).
 systemctl enable defenestra-opengl-provision.service 2>/dev/null || true
+systemctl enable defenestra-opengl-provision.path 2>/dev/null || true
 systemctl enable defenestra-opengl-compose.service 2>/dev/null || true
 
 systemctl enable docker.socket 2>/dev/null || true

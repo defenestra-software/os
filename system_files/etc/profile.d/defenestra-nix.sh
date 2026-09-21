@@ -14,11 +14,3 @@ if [ -d /nix/var/nix/profiles/default ]; then
 
     export NIXPKGS_ALLOW_UNFREE=1
 fi
-
-if [ -d /run/opengl-driver/lib ]; then
-    case ":${LD_LIBRARY_PATH:-}:" in
-        *":/run/opengl-driver/lib:"*) ;;
-        *) LD_LIBRARY_PATH="/run/opengl-driver/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
-    esac
-    export LD_LIBRARY_PATH
-fi
