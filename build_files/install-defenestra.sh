@@ -22,6 +22,7 @@ dnf5 -y install \
     gnome-shell-extension-dash-to-panel \
     gnome-shell-extension-dash-to-dock \
     gnome-shell-extension-places-menu \
+    gnome-shell-extension-window-list \
     gnome-shell-extension-light-style \
     gnome-shell-extension-drive-menu
 
@@ -253,16 +254,29 @@ fi
 dnf5 -y remove glib2-devel
 
 command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
-TILINGSHELL_EGO_VERSION="76"
-TILINGSHELL_SHA256="0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35"
-TILINGSHELL_URL="https://extensions.gnome.org/extension-data/tilingshellferrarodomenico.com.v${TILINGSHELL_EGO_VERSION}.shell-extension.zip"
-TILINGSHELL_DST="${BUNDLED_EXT_DST}/tilingshell@ferrarodomenico.com"
-TILINGSHELL_TMP="$(mktemp -d)"
-curl -fsSL -o "${TILINGSHELL_TMP}/ts.zip" "${TILINGSHELL_URL}"
-echo "${TILINGSHELL_SHA256}  ${TILINGSHELL_TMP}/ts.zip" | sha256sum -c -
-mkdir -p "${TILINGSHELL_DST}"
-unzip -q -o "${TILINGSHELL_TMP}/ts.zip" -d "${TILINGSHELL_DST}"
-rm -rf "${TILINGSHELL_TMP}"
+# Pin extensions.gnome.org builds and compile schemas
+install_ego_extension() {
+    local uuid="$1" version="$2" sha256="$3"
+    local url="https://extensions.gnome.org/extension-data/${uuid//@/}.v${version}.shell-extension.zip"
+    local dst="${BUNDLED_EXT_DST}/${uuid}"
+    local tmp
+    tmp="$(mktemp -d)"
+    curl -fsSL -o "${tmp}/ext.zip" "${url}"
+    echo "${sha256}  ${tmp}/ext.zip" | sha256sum -c -
+    mkdir -p "${dst}"
+    unzip -q -o "${tmp}/ext.zip" -d "${dst}"
+    if [ -d "${dst}/schemas" ]; then
+        glib-compile-schemas "${dst}/schemas"
+    fi
+    rm -rf "${tmp}"
+}
+
+install_ego_extension tilingshell@ferrarodomenico.com 76 \
+    0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35
+install_ego_extension gnome-mosaic@jardon.github.com 17 \
+    947897ba4fdb5f03ac51066397b9631790bdd001a1fa37f08f08f3939ffe9de8
+install_ego_extension paperwm@paperwm.github.com 148 \
+    2cef72ed7e31df4962584b52dabda9246c0ae81973b05f8d1202d9dbe9a3f794
 
 MOREWAITA_COMMIT="8ee561313b9737fa960d75ce2ac91846b4576df7"
 MOREWAITA_SHA256="599d8cecaef0fac3c46df5d448748854fbc7cbe851f5a911c7018befdb060c42"
