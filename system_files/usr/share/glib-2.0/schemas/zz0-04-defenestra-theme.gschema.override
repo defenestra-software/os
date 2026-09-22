@@ -10,6 +10,7 @@ document-font-name='Roboto 11'
 font-name='Roboto 11'
 monospace-font-name='JetBrains Mono 11'
 accent-color='blue'
+icon-theme='Defenestra'
 
 [org.gnome.mutter]
 center-new-windows=true

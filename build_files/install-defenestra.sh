@@ -25,7 +25,10 @@ dnf5 -y install \
     gnome-shell-extension-light-style \
     gnome-shell-extension-drive-menu
 
-dnf5 -y install gnome-initial-setup
+dnf5 -y install gnome-initial-setup nautilus-python
+
+# xdg-user-dirs before 0.20 has no Projects entry.
+grep -q '^PROJECTS=' /etc/xdg/user-dirs.defaults || echo 'PROJECTS=Projects' >>/etc/xdg/user-dirs.defaults
 
 dnf5 -y install zsh
 
@@ -261,6 +264,21 @@ mkdir -p "${TILINGSHELL_DST}"
 unzip -q -o "${TILINGSHELL_TMP}/ts.zip" -d "${TILINGSHELL_DST}"
 rm -rf "${TILINGSHELL_TMP}"
 
+MOREWAITA_COMMIT="8ee561313b9737fa960d75ce2ac91846b4576df7"
+MOREWAITA_SHA256="599d8cecaef0fac3c46df5d448748854fbc7cbe851f5a911c7018befdb060c42"
+MOREWAITA_URL="https://github.com/somepaulo/MoreWaita/archive/${MOREWAITA_COMMIT}.tar.gz"
+MOREWAITA_DST="/usr/share/icons/MoreWaita"
+MOREWAITA_TMP="$(mktemp -d)"
+curl -fsSL -o "${MOREWAITA_TMP}/mw.tar.gz" "${MOREWAITA_URL}"
+echo "${MOREWAITA_SHA256}  ${MOREWAITA_TMP}/mw.tar.gz" | sha256sum -c -
+tar -xzf "${MOREWAITA_TMP}/mw.tar.gz" -C "${MOREWAITA_TMP}" --strip-components=1
+mkdir -p "${MOREWAITA_DST}"
+cp -a "${MOREWAITA_TMP}"/{index.theme,AUTHORS,LICENSE,scalable,symbolic} "${MOREWAITA_DST}/"
+find "${MOREWAITA_DST}" -name meson.build -delete
+rm -rf "${MOREWAITA_TMP}"
+gtk-update-icon-cache -q -f "${MOREWAITA_DST}"
+/ctx/build_files/gen-icon-theme.sh /usr/share/icons/Adwaita "${MOREWAITA_DST}" /usr/share/icons/Defenestra
+
 # NVIDIA Vulkan ICD in /etc/vulkan/icd.d with a bare soname. Two copies of
 # libGLX_nvidia in one process segfault in glcore.
 if [ -e /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json ]; then
@@ -306,6 +324,7 @@ systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
 systemctl enable defenestra-libvirtd-setup.service 2>/dev/null || true
 systemctl --global enable defenestra-dynamic-fixes.service 2>/dev/null || true
 systemctl --global enable defenestra-user-setup.service 2>/dev/null || true
+systemctl --global enable defenestra-projects-icon.service 2>/dev/null || true
 
 # DNS-SD only: cups (UDP/631) is CVE-2024-47176.
 grep -qx 'BrowseRemoteProtocols none' /etc/cups/cups-browsed.conf

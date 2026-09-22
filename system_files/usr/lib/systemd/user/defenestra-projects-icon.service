@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Set the Projects folder icon
+After=xdg-user-dirs.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-projects-icon
+
+[Install]
+WantedBy=graphical-session-pre.target

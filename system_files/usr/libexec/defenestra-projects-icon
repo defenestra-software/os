@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# GLib has no special-dir icon for XDG_PROJECTS_DIR; set one unless the user already has.
+set -euo pipefail
+
+dir="$(xdg-user-dir PROJECTS)"
+# xdg-user-dir falls back to $HOME for an unset key.
+[[ "${dir}" != "${HOME}" && -d "${dir}" ]] || exit 0
+
+if ! gio info -a metadata::custom-icon-name "${dir}" | grep -q 'custom-icon-name:'; then
+    gio set "${dir}" metadata::custom-icon-name folder-projects
+fi
