@@ -5,7 +5,7 @@ set -ouex pipefail
 echo ":: Installing defenestraOS packages..."
 
 dnf5 -y copr enable defenestra/defenestra
-dnf5 -y install --refresh defenestra-arsenal defenestra-chassis nsncd \
+dnf5 -y install --refresh defenestra-chassis nsncd \
     gnome-shell-extension-hanabi \
     looking-glass-client \
     snapd
@@ -16,7 +16,7 @@ install -Dm644 /ctx/system_files/etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra \
 install -Dm644 /ctx/system_files/etc/yum.repos.d/defenestra.repo \
     /etc/yum.repos.d/defenestra.repo
 dnf5 -y install --enable-repo=defenestra defenestra-store defenestra-store-services \
-    hyperpane-display
+    hyperpane-display defenestra-arsenal
 
 dnf5 -y install \
     gnome-shell-extension-dash-to-panel \
