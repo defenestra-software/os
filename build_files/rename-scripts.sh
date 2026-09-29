@@ -86,14 +86,6 @@ for f in /etc/dconf/db/distro.d/locks/*bazzite*; do
     echo "  Renamed: $(basename "$f") → $(basename "$newname")"
 done
 
-# cosmetic rename
-for d in /usr/lib/tuned/profiles/*-bazzite*; do
-    [ -d "$d" ] || continue
-    newname="${d//bazzite/defenestra}"
-    mv "$d" "$newname"
-    echo "  Renamed: $(basename "$d") → $(basename "$newname")"
-done
-
 # Targeted sed across known dirs only (avoids binary files in /usr/bin).
 echo ":: Updating internal references (bazzite → defenestra)..."
 
