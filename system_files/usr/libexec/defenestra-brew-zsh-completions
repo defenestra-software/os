@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Mirror linuxbrew's zsh completions into a root-owned directory since
+# compaudit rejects fpath directories owned by anyone but root or the user
+
+set -euo pipefail
+shopt -s nullglob
+
+src=/var/home/linuxbrew/.linuxbrew/share/zsh/site-functions
+dest=/var/lib/defenestra/brew/zsh
+
+install -d -m 0755 "$dest"
+
+declare -A keep=()
+for f in "$src"/*; do
+    # -f also skips links left dangling by an uninstall.
+    [ -f "$f" ] || continue
+    name="${f##*/}"
+    keep[$name]=1
+    cmp -s "$f" "$dest/$name" || install -m 0644 "$f" "$dest/$name"
+done
+
+for f in "$dest"/*; do
+    [[ -v keep[${f##*/}] ]] || rm -f "$f"
+done

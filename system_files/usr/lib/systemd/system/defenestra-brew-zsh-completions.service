@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Mirror Homebrew zsh completions to a root-owned fpath dir
+After=local-fs.target defenestra-brew-setup.service
+RequiresMountsFor=/var
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-brew-zsh-completions
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Mirror Homebrew zsh completions when changes occur
+
+[Path]
+PathChanged=/var/home/linuxbrew/.linuxbrew/share/zsh/site-functions
+Unit=defenestra-brew-zsh-completions.service
+
+[Install]
+WantedBy=paths.target
