@@ -41,6 +41,7 @@ cat > /usr/share/ublue-os/image-info.json <<EOF
   "image-variant": "${IMAGE_VARIANT}",
   "image-tag": "${VERSION_TAG}",
   "base-image": "bazzite",
+  "base-image-name": "silverblue",
   "fedora-version": "$(rpm -E %fedora)"
 }
 EOF

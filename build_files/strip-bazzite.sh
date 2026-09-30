@@ -13,6 +13,14 @@ dnf5 remove -y --noautoremove bazzite-updater
 rm -f /usr/share/ublue-os/just/93-bazzite-update.just
 sed -i '\|/usr/share/ublue-os/just/93-bazzite-update.just|d' /usr/share/ublue-os/justfile
 
+# Bazzite default desktop
+rm -f /usr/share/ublue-os/just/90-bazzite-de.just
+sed -i '\|/usr/share/ublue-os/just/90-bazzite-de.just|d' /usr/share/ublue-os/justfile
+rm -rf /usr/share/ublue-os/dconfs/
+
+# Drop bazzite homebrew unit
+rm -f /usr/lib/systemd/system-preset/01-homebrew.preset
+
 rm -rf /usr/share/ublue-os/bazzite/
 find /usr/share/icons/hicolor -name 'bazzite-*' -delete 2>/dev/null || true
 
