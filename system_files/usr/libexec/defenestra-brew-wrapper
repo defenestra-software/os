@@ -2,10 +2,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Routes brew to the linuxbrew system user so the prefix has one owner.
 
+brew=/var/home/linuxbrew/.linuxbrew/bin/brew
+
+# Let non admins know they need to be admin to install via brew
+if ! sudo -n -l -u linuxbrew "$brew" >/dev/null 2>&1; then
+    echo "brew: Homebrew is shared system-wide and managed by administrators (wheel)." >&2
+    exit 1
+fi
+
+# pass HOMEBREW_* variables.
+env=("XDG_RUNTIME_DIR=/run/user/$(id -u linuxbrew)")
+while IFS= read -r var; do
+    env+=("${var}=${!var}")
+done < <(compgen -e -X '!HOMEBREW_*')
+
 # brew refuses to run if CWD is not readable by the target user.
 cd /var/home/linuxbrew || cd /
 # -H: caches/taps/state land in the shared prefix, not the caller's home.
 # XDG_RUNTIME_DIR: brew services talks to linuxbrew's systemd --user.
 # UID from id: sysusers allocates it dynamically.
-exec sudo -H -u linuxbrew "XDG_RUNTIME_DIR=/run/user/$(id -u linuxbrew)" \
-    /var/home/linuxbrew/.linuxbrew/bin/brew "$@"
+exec sudo -H -u linuxbrew "${env[@]}" "$brew" "$@"

@@ -70,6 +70,11 @@ if [ -f /etc/xdg/mimeapps.list ]; then
       sed -i '/bazaar/d' /etc/xdg/mimeapps.list
 fi
 
+# Fedora defaults
+sed -i -e '/^# VIM is more usable on deck/d' -e '\|^EDITOR=/usr/bin/vim$|d' \
+      -e '/^# Disable Brew auto-update$/d' -e '/^HOMEBREW_NO_AUTO_UPDATE=/d' \
+      -e '/^$/d' /etc/environment
+
 # Disable before rename; install-defenestra.sh re-enables the new names.
 systemctl disable bazzite-flatpak-manager.service 2>/dev/null || true
 systemctl disable bazzite-hardware-setup.service 2>/dev/null || true
