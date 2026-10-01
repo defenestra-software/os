@@ -8,12 +8,20 @@
 
 set -euo pipefail
 
-prefix=ostree-unverified-registry:
-ref="$(rpm-ostree status --booted --json | jq -r '.deployments[0]["container-image-reference"] // empty')"
+# bootc omits .signature for any origins that skips verification.
+image="$(bootc status --json | jq -r '
+    .status.booted.image.image
+    | select(.transport == "registry" and .signature == null)
+    | .image')"
 
-case "$ref" in
-"${prefix}ghcr.io/defenestra-software/"*) ;;
+case "$image" in
+ghcr.io/defenestra-software/*) ;;
 *) exit 0 ;;
 esac
 
-bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry "${ref#"$prefix"}"
+# temporaly privately mount to allow signing
+# shellcheck disable=SC2016
+unshare --mount --propagation private -- sh -c '
+    mount -o remount,rw /sysroot &&
+    exec bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry "$1"
+' sh "$image"
