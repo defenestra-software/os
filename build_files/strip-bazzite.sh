@@ -82,11 +82,22 @@ fi
 sed -i -e '/^# VIM is more usable on deck/d' -e '\|^EDITOR=/usr/bin/vim$|d' \
       -e '/^# Disable Brew auto-update$/d' -e '/^HOMEBREW_NO_AUTO_UPDATE=/d' \
       -e '/^$/d' /etc/environment
+rm -f /etc/profile.d/ms-edit-default-editor.sh
+
+# Remove Bazzite verify
+rm -f /etc/profile.d/verify_motd.sh
+rm -f /usr/share/ublue-os/just/92-bazzite-verify.just
+sed -i '\|/usr/share/ublue-os/just/92-bazzite-verify.just|d' /usr/share/ublue-os/justfile
+
+# Strip Bazzite libvirt
+rm -f /usr/lib/systemd/system/bazzite-libvirtd-setup.service
+rm -f /usr/lib/tmpfiles.d/bazzite-libvirt.conf
+rm -f /usr/share/ublue-os/just/84-bazzite-virt.just
+sed -i '\|/usr/share/ublue-os/just/84-bazzite-virt.just|d' /usr/share/ublue-os/justfile
 
 # Disable before rename; install-defenestra.sh re-enables the new names.
 systemctl disable bazzite-flatpak-manager.service 2>/dev/null || true
 systemctl disable bazzite-hardware-setup.service 2>/dev/null || true
-systemctl disable bazzite-libvirtd-setup.service 2>/dev/null || true
 systemctl --global disable bazzite-dynamic-fixes.service 2>/dev/null || true
 systemctl --global disable bazzite-user-setup.service 2>/dev/null || true
 systemctl disable bazzite-tdpfix.service 2>/dev/null || true

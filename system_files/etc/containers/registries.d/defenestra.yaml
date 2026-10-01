@@ -1,0 +1,3 @@
+docker:
+  ghcr.io/defenestra-software:
+    use-sigstore-attachments: true

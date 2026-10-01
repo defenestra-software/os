@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Enable signature enforcement for unverified installs, using the same
+# origin rewrite the installer does. No download or reboot: the next update
+# will be the first one verified. A staged unverified image will get fixed on
+# boot
+
+set -euo pipefail
+
+prefix=ostree-unverified-registry:
+ref="$(rpm-ostree status --booted --json | jq -r '.deployments[0]["container-image-reference"] // empty')"
+
+case "$ref" in
+"${prefix}ghcr.io/defenestra-software/"*) ;;
+*) exit 0 ;;
+esac
+
+bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry "${ref#"$prefix"}"

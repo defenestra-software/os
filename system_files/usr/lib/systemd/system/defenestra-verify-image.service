@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Enforce signature verification for defenestraOS image updates
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-verify-image
+
+[Install]
+WantedBy=multi-user.target

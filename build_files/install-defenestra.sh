@@ -15,6 +15,17 @@ install -Dm644 /ctx/system_files/etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra \
     /etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra
 install -Dm644 /ctx/system_files/etc/yum.repos.d/defenestra.repo \
     /etc/yum.repos.d/defenestra.repo
+
+# Images pulled from our registry must contain a cosign signature from the
+# CI's key. It must also contain registries.d/defenestra.yaml, or no
+# signature will be found.
+install -Dm644 /ctx/cosign.pub /etc/pki/containers/defenestra.pub
+jq '.transports.docker["ghcr.io/defenestra-software"] = [{
+        "type": "sigstoreSigned",
+        "keyPath": "/etc/pki/containers/defenestra.pub",
+        "signedIdentity": {"type": "matchRepository"}
+    }]' /etc/containers/policy.json >/tmp/policy.json
+mv /tmp/policy.json /etc/containers/policy.json
 dnf5 -y install --enable-repo=defenestra defenestra-store defenestra-store-services \
     hyperpane-display defenestra-arsenal
 
@@ -322,6 +333,7 @@ systemctl enable docker.socket 2>/dev/null || true
 systemctl --global enable snapd.session-agent.socket 2>/dev/null || true
 
 systemctl enable defenestra-brew-setup.service 2>/dev/null || true
+systemctl enable defenestra-verify-image.service 2>/dev/null || true
 systemctl enable defenestra-brew-zsh-completions.service 2>/dev/null || true
 systemctl enable defenestra-brew-zsh-completions.path 2>/dev/null || true
 systemctl enable store-system.service 2>/dev/null || true
@@ -337,7 +349,6 @@ done
 
 systemctl enable defenestra-flatpak-manager.service 2>/dev/null || true
 systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
-systemctl enable defenestra-libvirtd-setup.service 2>/dev/null || true
 systemctl --global enable defenestra-dynamic-fixes.service 2>/dev/null || true
 systemctl --global enable defenestra-user-setup.service 2>/dev/null || true
 systemctl --global enable defenestra-projects-icon.service 2>/dev/null || true

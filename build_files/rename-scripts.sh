@@ -43,7 +43,6 @@ fi
 
 rename_file /usr/lib/systemd/system/bazzite-hardware-setup.service   /usr/lib/systemd/system/defenestra-hardware-setup.service
 rename_file /usr/lib/systemd/system/bazzite-flatpak-manager.service  /usr/lib/systemd/system/defenestra-flatpak-manager.service
-rename_file /usr/lib/systemd/system/bazzite-libvirtd-setup.service   /usr/lib/systemd/system/defenestra-libvirtd-setup.service
 rename_file /usr/lib/systemd/user/bazzite-dynamic-fixes.service      /usr/lib/systemd/user/defenestra-dynamic-fixes.service
 rename_file /usr/lib/systemd/user/bazzite-user-setup.service         /usr/lib/systemd/user/defenestra-user-setup.service
 rename_file /usr/lib/systemd/system/bazzite-tdpfix.service           /usr/lib/systemd/system/defenestra-tdpfix.service
@@ -129,7 +128,6 @@ for dir in "${sed_dirs[@]}"; do
             -e 's/bazzite-fetch-image/defenestra-fetch-image/g' \
             -e 's/bazzite-tdpfix/defenestra-tdpfix/g' \
             -e 's/bazzite-autologin/defenestra-autologin/g' \
-            -e 's/bazzite-libvirtd-setup/defenestra-libvirtd-setup/g' \
             -e 's/org\.bazzite\./org.defenestra./g' \
             -e 's/bazzite-neofetch/defenestra-fastfetch/g' \
             -e 's/bazzite-cli\.Brewfile/defenestra-cli.Brewfile/g' \

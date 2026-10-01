@@ -20,6 +20,7 @@ ARG BASE_HANDHELD_NVIDIA_OPEN="${BASE_HANDHELD_NVIDIA_OPEN:-ghcr.io/ublue-os/baz
 FROM scratch AS ctx
 COPY build_files /build_files
 COPY system_files /system_files
+COPY cosign.pub /cosign.pub
 
 FROM ${BASE_DESKTOP} AS defenestraos
 
