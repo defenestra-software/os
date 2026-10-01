@@ -20,9 +20,15 @@ install -Dm644 /ctx/system_files/etc/yum.repos.d/defenestra.repo \
 # CI's key. It must also contain registries.d/defenestra.yaml, or no
 # signature will be found.
 install -Dm644 /ctx/cosign.pub /etc/pki/containers/defenestra.pub
+
+# Offline backup key
+install -Dm644 /ctx/cosign-backup.pub /etc/pki/containers/defenestra-backup.pub
 jq '.transports.docker["ghcr.io/defenestra-software"] = [{
         "type": "sigstoreSigned",
-        "keyPath": "/etc/pki/containers/defenestra.pub",
+        "keyPaths": [
+            "/etc/pki/containers/defenestra.pub",
+            "/etc/pki/containers/defenestra-backup.pub"
+        ],
         "signedIdentity": {"type": "matchRepository"}
     }]' /etc/containers/policy.json >/tmp/policy.json
 mv /tmp/policy.json /etc/containers/policy.json
