@@ -223,7 +223,7 @@ jobs:
       - name: Rechunk Image
         if: steps.freshness.outputs.skip != 'true'
         env:
-          MAX_LAYER_BYTES: 1073741824
+          MAX_LAYER_BYTES: 1610612736
         run: |
           set -euo pipefail
           IMAGE="localhost/${{ env.IMAGE_NAME }}:${{ env.BUILD_CHANNEL }}"
