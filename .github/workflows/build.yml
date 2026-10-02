@@ -218,7 +218,37 @@ jobs:
             --format docker \
             .
 
-          # Tag all metadata tags
+      # rechunk the image to reduce the size of the layers for easier update
+      # and to allow machines with 4GB of memory to be able to install the OS
+      - name: Rechunk Image
+        if: steps.freshness.outputs.skip != 'true'
+        env:
+          MAX_LAYER_BYTES: 1073741824
+        run: |
+          set -euo pipefail
+          IMAGE="localhost/${{ env.IMAGE_NAME }}:${{ env.BUILD_CHANNEL }}"
+
+          sudo podman run --rm --privileged \
+            -v /var/lib/containers:/var/lib/containers \
+            --entrypoint /usr/bin/rpm-ostree \
+            "${IMAGE}" \
+            compose build-chunked-oci --bootc --format-version 2 --max-layers 128 \
+            --from "${IMAGE}" --output "containers-storage:${IMAGE}"
+          sudo podman image prune -f
+
+          diff_ids=$(sudo podman inspect --format '{{ json .RootFS.Layers }}' "${IMAGE}")
+          largest=$(sudo jq --argjson ids "${diff_ids}" \
+            '[.[] | select(."diff-digest" as $d | $ids | index($d)) | ."diff-size"] | max' \
+            /var/lib/containers/storage/overlay-layers/layers.json)
+          echo "largest layer: ${largest} bytes"
+          if [ "${largest}" -gt "${MAX_LAYER_BYTES}" ]; then
+            echo "::error::largest layer is ${largest} bytes, over the ${MAX_LAYER_BYTES} limit; installs fail on low-memory machines." >&2
+            exit 1
+          fi
+
+      - name: Tag Image
+        if: steps.freshness.outputs.skip != 'true'
+        run: |
           for tag in ${{ steps.metadata.outputs.tags }}; do
             sudo buildah tag ${{ env.IMAGE_NAME }}:${{ env.BUILD_CHANNEL }} ${{ env.IMAGE_NAME }}:${tag}
           done
