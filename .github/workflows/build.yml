@@ -15,8 +15,8 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_DESC: "defenestraOS - Cloud-native gaming and workstation OS"
-  IMAGE_KEYWORDS: "bootc,ublue,universal-blue,defenestra,gaming,workstation"
+  IMAGE_DESC: "defenestraOS - Cloud-native general-purpose desktop OS"
+  IMAGE_KEYWORDS: "bootc,ublue,universal-blue,defenestra,desktop,consumer-ready,image-based,gaming"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   # Every build lands on canary. Images reach beta and stable by being promoted
   BUILD_CHANNEL: "canary"
@@ -124,6 +124,7 @@ jobs:
             defenestraos-handheld-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
           esac
           echo "BASE_DIGEST=$(skopeo inspect --format '{{.Digest}}' docker://${BASE})" >> "$GITHUB_ENV"
+          echo "BASE_VERSION=$(skopeo inspect --format '{{ index .Labels "org.opencontainers.image.version" }}' docker://${BASE})" >> "$GITHUB_ENV"
 
       - name: Get current date
         if: steps.freshness.outputs.skip != 'true'
@@ -147,9 +148,9 @@ jobs:
             io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/README.md
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
             org.opencontainers.image.description=${{ env.IMAGE_DESC }}
-            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-            org.opencontainers.image.vendor=${{ github.repository_owner }}
-            org.opencontainers.image.version=${{ steps.date.outputs.build_id }}
+            org.opencontainers.image.title=${{ env.VERSION_PRETTY }}
+            org.opencontainers.image.vendor=Defenestra, LLC
+            org.opencontainers.image.version=${{ env.BASE_VERSION }}
             org.opencontainers.image.revision=${{ github.sha }}
             io.artifacthub.package.deprecated=false
             io.artifacthub.package.keywords=${{ env.IMAGE_KEYWORDS }}
@@ -208,11 +209,19 @@ jobs:
       - name: Build Image
         if: steps.freshness.outputs.skip != 'true'
         id: build_image
+        env:
+          LABELS: ${{ steps.metadata.outputs.labels }}
         run: |
+          label_args=()
+          while IFS= read -r label; do
+            if [ -n "$label" ]; then label_args+=(--label "$label"); fi
+          done <<< "$LABELS"
+
           sudo buildah build \
             --target ${{ matrix.target }} \
             --build-arg VERSION_TAG="${{ steps.date.outputs.build_id }}" \
             --build-arg VERSION_PRETTY="${{ env.VERSION_PRETTY }}" \
+            "${label_args[@]}" \
             --tag ${{ env.IMAGE_NAME }}:${{ env.BUILD_CHANNEL }} \
             --layers \
             --format docker \
@@ -243,6 +252,12 @@ jobs:
           echo "largest layer: ${largest} bytes"
           if [ "${largest}" -gt "${MAX_LAYER_BYTES}" ]; then
             echo "::error::largest layer is ${largest} bytes, over the ${MAX_LAYER_BYTES} limit; installs fail on low-memory machines." >&2
+            exit 1
+          fi
+
+          stamped=$(sudo podman inspect --format '{{ index .Labels "org.defenestra.base.digest" }}' "${IMAGE}")
+          if [ "${stamped}" != "${BASE_DIGEST}" ]; then
+            echo "::error::org.defenestra.base.digest is '${stamped}', expected '${BASE_DIGEST}'." >&2
             exit 1
           fi
 
