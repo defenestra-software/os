@@ -319,9 +319,10 @@ if [ -e /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json ]; then
     rm -f /usr/share/vulkan/icd.d/nvidia_icd.*.json
 fi
 
-# Pin nixpkgs rev for defenestra-opengl-provision; first-boot must not float on unstable.
+# Pin nixpkgs rev for defenestra-opengl-provision. Use stable channel since
+# Mesa needs newer glibc otherwise nix apps fails to load. Bump each NixOS release.
 mkdir -p /usr/share/defenestra
-curl -fsSL https://channels.nixos.org/nixpkgs-unstable/git-revision \
+curl -fsSL https://channels.nixos.org/nixos-26.05/git-revision \
     >/usr/share/defenestra/opengl-nixpkgs-rev
 
 systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
