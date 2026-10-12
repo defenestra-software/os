@@ -370,6 +370,7 @@ CreateIPPPrinterQueues Driverless
 DefaultOptions ColorModel=RGB
 EOF
 systemctl enable cups-browsed.service 2>/dev/null || true
+systemctl enable defenestra-cups-browsed-resume.service 2>/dev/null || true
 
 # Deck-only units; harmless no-op on desktop variants.
 systemctl enable defenestra-tdpfix.service 2>/dev/null || true
