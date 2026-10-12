@@ -29,6 +29,9 @@ rm -f /usr/libexec/bazzite-announcement
 rm -rf /usr/share/ublue-os/announcements/
 rm -rf /usr/share/yafti/
 
+rm -f /etc/skel/.config/autostart/bazzite-portal.desktop
+rm -f /etc/skel/.config/autostart/steam.desktop
+
 rm -f /usr/share/applications/bazzite-documentation.desktop
 rm -f /usr/share/applications/discourse.desktop
 rm -f /usr/share/applications/system-update.desktop

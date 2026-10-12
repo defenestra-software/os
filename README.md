@@ -1,264 +1,192 @@
-# image-template
+# defenestraOS
 
-This repository is meant to be a template for building your own custom [bootc](https://github.com/bootc-dev/bootc) image. This template is the recommended way to make customizations to any image published by the Universal Blue Project.
+![Defenestra](./system_files/usr/share/icons/hicolor/256x256/defenestra-logo-icon.png)
 
-# Community
+defenestraOS is an immutable system based on Universal blue and Bazzite. Its goal is to be user friendly, secure by default (within reason), and stable. It provides compatibility and integrations where needed, so it fits into existing work environments and runs the software you depend on.
 
-If you have questions about this template after following the instructions, try the following spaces:
-- [Universal Blue Forums](https://universal-blue.discourse.group/)
-- [Universal Blue Discord](https://discord.gg/WEu6BdFEtp)
-- [bootc discussion forums](https://github.com/bootc-dev/bootc/discussions) - This is not an Universal Blue managed space, but is an excellent resource if you run into issues with building bootc images.
+## Features
 
-# How to Use
+- Security enhancements
+  - Signed images: every update is verified against the defenestraOS key before it is applied
+  - Kernel and network hardening without breaking debugging and eBPF tools
+  - Atomic updates with rollback to the previous image
+  - Secure Boot support and SELinux enforcing enabled
+  - USBGuard, U2F/YubiKey login, and fscrypt installed and ready to turn on
+- Multiple supported package managers all unified behind a graphical store
+  - Flatpak
+  - Homebrew (with shared system user)
+  - Nix (per-user and system-wide)
+  - Snap (disabled by default)
+  - AppImage
+- A desktop that fits how you work
+  - First-run onboarding allowing user to pick layout, browser, apps, and configure their phone
+- Desktop layouts, switchable at any time from Arsenal
+  - Modern (the default)
+  - Vanilla GNOME
+  - GNOME Classic
+  - Windows-like, Windows 11-like, Windows List-like, Windows Classic
+  - Mac-like
+  - ChromeOS-like
+  - Ubuntu-like
+  - Mint-like
+  - elementary OS-like
+  - KDE Plasma-like
+  - Budgie-like
+  - Touch
+  - Compact
+  - Tiling
+  - Scrolling (using PaperWM)
+- Ready for work networks
+  - Join FreeIPA and Active Directory domains
+  - Network printers and scanners are found and automatically setup
+- Hardware support
+  - NVIDIA variants with the proprietary or open driver
+  - GPU compute for AMD (ROCm) and Intel, including Intel NPUs
+  - Bazzite's gaming stack and handheld support
+- Containers
+  - Docker
+  - Podman
+  - Toolbox
+  - Incus system containers
+- Virtual machines
+  - Incus virtual machines
+  - Hyperpane integration: log in to a virtual machine straight from the login screen
+  - Early GPU binding at boot for Hyperpane GPU passthrough
+- System management
+  - Chassis device manager for hardware and drivers
+  - Cockpit for remote administration
 
-To get started on your first bootc image, simply read and follow the steps in the next few headings.
-If you prefer instructions in video form, TesterTech created an excellent tutorial, embedded below.
+## Variants
 
-[![Video Tutorial](https://img.youtube.com/vi/IxBl11Zmq5w/0.jpg)](https://www.youtube.com/watch?v=IxBl11Zmq5wE)
+Every variant is published to `ghcr.io/defenestra-software` and has its own installer ISO.
 
-## Step 0: Prerequisites
+| Image | For |
+| --- | --- |
+| `defenestraos` | Desktops and laptops with AMD or Intel graphics |
+| `defenestraos-nvidia` | NVIDIA graphics, proprietary driver |
+| `defenestraos-nvidia-open` | NVIDIA graphics, open kernel modules |
+| `defenestraos-handheld` | Handhelds with AMD or Intel graphics |
 
-These steps assume you have the following:
-- A Github Account
-- A machine running a bootc image (e.g. Bazzite, Bluefin, Aurora, or Fedora Atomic)
-- Experience installing and using CLI programs
+Each image has three channels, used as the image tag:
 
-## Step 1: Preparing the Template
+- `stable` is what the ISOs install and what most machines should follow.
+- `beta` is the next stable candidate.
+- `canary` is rebuilt every day.
 
-### Step 1a: Copying the Template
+An image reaches `beta` and `stable` by promotion, so the image on `stable` is the same one that was tested on `canary`.
 
-Select `Use this Template` on this page. You can set the name and description of your repository to whatever you would like, but all other settings should be left untouched.
+## System Requirements
 
-Once you have finished copying the template, you need to enable the Github Actions workflows for your new repository.
-To enable the workflows, go to the `Actions` tab of the new repository and click the button to enable workflows.
+| | Minimum | Recommended |
+| --- | --- | --- |
+| Processor | 64-bit Intel or AMD (x86_64) | 2 GHz quad-core or better |
+| Memory | 4 GB | 8 GB or more |
+| Storage | 64 GB | 120 GB or more on an SSD |
+| Firmware | UEFI. CSM/Legacy boot is not supported. | |
+| Graphics | AMD, Intel, or NVIDIA. See [Variants](#variants) for the NVIDIA images. | A card that supports Vulkan 1.3, for gaming |
 
-### Step 1b: Cloning the New Repository
+Installation is slow on a 4 GB machine. The base system takes approximately 10 GB of disk including only core apps, not including apps installed during onboarding.
 
-Here I will defer to the much superior GitHub documentation on the matter. You can use whichever method is easiest.
-[GitHub Documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+## Downloading
 
-Once you have the repository on your local drive, proceed to the next step.
+Choose the installer ISO that matches your hardware, write it to a USB drive, and boot from it.
 
-## Step 2: Initial Setup
+| Hardware | ISO | Checksum |
+| --- | --- | --- |
+| AMD or Intel graphics | [defenestraos](https://os.defenestra.io/iso/latest/defenestraos-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-stable-live-amd64.iso-CHECKSUM) |
+| NVIDIA RTX, or GTX 16xx series and newer | [defenestraos-nvidia-open](https://os.defenestra.io/iso/latest/defenestraos-nvidia-open-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-nvidia-open-stable-live-amd64.iso-CHECKSUM) |
+| NVIDIA GTX 9xx to 10xx series | [defenestraos-nvidia](https://os.defenestra.io/iso/latest/defenestraos-nvidia-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-nvidia-stable-live-amd64.iso-CHECKSUM) |
+| Handhelds with AMD or Intel graphics | [defenestraos-handheld](https://os.defenestra.io/iso/latest/defenestraos-handheld-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-handheld-stable-live-amd64.iso-CHECKSUM) |
 
-### Step 2a: Creating a Cosign Key
-
-Container signing is important for end-user security and is enabled on all Universal Blue images. By default the image builds *will fail* if you don't.
-
-First, install the [cosign CLI tool](https://edu.chainguard.dev/open-source/sigstore/cosign/how-to-install-cosign/#installing-cosign-with-the-cosign-binary)
-With the cosign tool installed, run inside your repo folder:
+Each ISO is 6 to 8 GB. To check a download, save the checksum file next to the ISO and run:
 
 ```bash
-COSIGN_PASSWORD="" cosign generate-key-pair
+sha256sum -c defenestraos-stable-live-amd64.iso-CHECKSUM
 ```
 
-The signing key will be used in GitHub Actions and will not work if it is password protected.
+## Rebasing
+
+A machine already running Fedora Atomic or a Universal Blue image can switch to defenestraOS without reinstalling. Your home directory and Flatpaks are kept.
+
+Rebase to the unsigned reference first. This brings in the defenestraOS signing key and policy.
+
+```bash
+rpm-ostree rebase ostree-unverified-registry:ghcr.io/defenestra-software/defenestraos:stable
+systemctl reboot
+```
+
+Then rebase to the signed reference, so every later update is verified before it is applied:
+
+```bash
+rpm-ostree rebase ostree-image-signed:docker://ghcr.io/defenestra-software/defenestraos:stable
+systemctl reboot
+```
+
+Replace `defenestraos` with another image from the [Variants](#variants) table, or `stable` with another channel, as needed.
+
+## Verification
+
+These images are signed with sigstore's [cosign](https://docs.sigstore.dev/cosign/key_management/overview/). You can verify the signature by downloading the [`cosign.pub`](./cosign.pub) key from this repo and running the following command:
+
+```bash
+cosign verify --key cosign.pub ghcr.io/defenestra-software/defenestraos:stable
+```
+
+An installed system does this on its own. The image ships the key and a container policy that rejects any defenestraOS update that is not signed with it.
+
+## Secure Boot
 
 > [!WARNING]
-> Be careful to *never* accidentally commit `cosign.key` into your git repo. If this key goes out to the public, the security of your repository is compromised.
+> **Steam Deck users: the Steam Deck does not come with Secure Boot enabled and does not ship with any keys enrolled by default. Do not enable this unless you absolutely know what you're doing.**
 
-Next, you need to add the key to GitHub. This makes use of GitHub's secret signing system.
+Secure Boot is supported with the Universal Blue key, which signs the kernel and drivers defenestraOS inherits from Bazzite. The public key is in the Universal Blue akmods repository [here](https://github.com/ublue-os/akmods/raw/main/certs/public_key.der).
 
-<details>
-    <summary>Using the Github Web Interface (preferred)</summary>
+The installer queues this key for enrollment. On the first boot after installing, the firmware asks whether to enroll it.
 
-Go to your repository settings, under `Secrets and Variables` -> `Actions`
-![image](https://user-images.githubusercontent.com/1264109/216735595-0ecf1b66-b9ee-439e-87d7-c8cc43c2110a.png)
-Add a new secret and name it `SIGNING_SECRET`, then paste the contents of `cosign.key` into the secret and save it. Make sure it's the .key file and not the .pub file. Once done, it should look like this:
-![image](https://user-images.githubusercontent.com/1264109/216735690-2d19271f-cee2-45ac-a039-23e6a4c16b34.png)
-</details>
-<details>
-<summary>Using the Github CLI</summary>
-
-If you have the `github-cli` installed, run:
+If you'd like to enroll the key before installing or rebasing, download it and run the following:
 
 ```bash
-gh secret set SIGNING_SECRET < cosign.key
+sudo mokutil --timeout -1
+sudo mokutil --import public_key.der
 ```
-</details>
 
-### Step 2b: Choosing Your Base Image
+On a machine already running defenestraOS, you may instead run `ujust enroll-secure-boot-key`.
 
-To choose a base image, simply modify the line in the container file starting with `FROM`. This will be the image your image derives from, and is your starting point for modifications.
-For a base image, you can choose any of the Universal Blue images or start from a Fedora Atomic system. Below this paragraph is a dropdown with a non-exhaustive list of potential base images.
+If asked for a password, use `universalblue`.
 
-<details>
-    <summary>Base Images</summary>
+## Building
 
-- Bazzite: `ghcr.io/ublue-os/bazzite:stable`
-- Aurora: `ghcr.io/ublue-os/aurora:stable`
-- Bluefin: `ghcr.io/ublue-os/bluefin:stable`
-- Universal Blue Base: `ghcr.io/ublue-os/base-main:latest`
-- Fedora: `quay.io/fedora/fedora-bootc:42`
+Images are built with [podman](https://podman.io/) and [just](https://just.systems/). Run `just` with no arguments to list every recipe.
 
-You can find more Universal Blue images on the [packages page](https://github.com/orgs/ublue-os/packages).
-</details>
-
-If you don't know which image to pick, choosing the one your system is currently on is the best bet for a smooth transition. To find out what image your system currently uses, run the following command:
-```bash
-sudo bootc status
-```
-This will show you all the info you need to know about your current image. The image you are currently on is displayed after `Booted image:`. Paste that information after the `FROM` statement in the Containerfile to set it as your base image.
-
-### Step 2c: Changing Names
-
-Change the first line in the [Justfile](./Justfile) to your image's name.
-
-To commit and push all the files changed and added in step 2 into your Github repository:
-```bash
-git add Containerfile Justfile cosign.pub
-git commit -m "Initial Setup"
-git push
-```
-Once pushed, go look at the Actions tab on your Github repository's page.  The green checkmark should be showing on the top commit, which means your new image is ready!
-
-## Step 3: Switch to Your Image
-
-From your bootc system, run the following command substituting in your Github username and image name where noted.
-```bash
-sudo bootc switch ghcr.io/<username>/<image_name>
-```
-This should queue your image for the next reboot, which you can do immediately after the command finishes. You have officially set up your custom image! See the following section for an explanation of the important parts of the template for customization.
-
-# Repository Contents
-
-## Containerfile
-
-The [Containerfile](./Containerfile) defines the operations used to customize the selected image.This file is the entrypoint for your image build, and works exactly like a regular podman Containerfile. For reference, please see the [Podman Documentation](https://docs.podman.io/en/latest/Introduction.html).
-
-## build.sh
-
-The [build.sh](./build_files/build.sh) file is called from your Containerfile. It is the best place to install new packages or make any other customization to your system. There are customization examples contained within it for your perusal.
-
-## build.yml
-
-The [build.yml](./.github/workflows/build.yml) Github Actions workflow creates your custom OCI image and publishes it to the Github Container Registry (GHCR). By default, the image name will match the Github repository name. There are several environment variables at the start of the workflow which may be of interest to change.
-
-# Building Disk Images
-
-This template provides an out of the box workflow for creating disk images (ISO, qcow, raw) for your custom OCI image which can be used to directly install onto your machines.
-
-This template provides a way to upload the disk images that is generated from the workflow to a S3 bucket. The disk images will also be available as an artifact from the job, if you wish to use an alternate provider. To upload to S3 we use [rclone](https://rclone.org/) which is able to use [many S3 providers](https://rclone.org/s3/).
-
-## Setting Up ISO Builds
-
-The [build-disk.yml](./.github/workflows/build-disk.yml) Github Actions workflow creates a disk image from your OCI image by utilizing the [bootc-image-builder](https://osbuild.org/docs/bootc/). In order to use this workflow you must complete the following steps:
-
-1. Modify `disk_config/iso.toml` to point to your custom container image before generating an ISO image.
-2. If you changed your image name from the default in `build.yml` then in the `build-disk.yml` file edit the `IMAGE_REGISTRY`, `IMAGE_NAME` and `DEFAULT_TAG` environment variables with the correct values. If you did not make changes, skip this step.
-3. Finally, if you want to upload your disk images to S3 then you will need to add your S3 configuration to the repository's Action secrets. This can be found by going to your repository settings, under `Secrets and Variables` -> `Actions`. You will need to add the following
-  - `S3_PROVIDER` - Must match one of the values from the [supported list](https://rclone.org/s3/)
-  - `S3_BUCKET_NAME` - Your unique bucket name
-  - `S3_ACCESS_KEY_ID` - It is recommended that you make a separate key just for this workflow
-  - `S3_SECRET_ACCESS_KEY` - See above.
-  - `S3_REGION` - The region your bucket lives in. If you do not know then set this value to `auto`.
-  - `S3_ENDPOINT` - This value will be specific to the bucket as well.
-
-Once the workflow is done, you'll find the disk images either in your S3 bucket or as part of the summary under `Artifacts` after the workflow is completed.
-
-# Artifacthub
-
-This template comes with the necessary tooling to index your image on [artifacthub.io](https://artifacthub.io). Use the `artifacthub-repo.yml` file at the root to verify yourself as the publisher. This is important to you for a few reasons:
-
-- The value of artifacthub is it's one place for people to index their custom images, and since we depend on each other to learn, it helps grow the community. 
-- You get to see your pet project listed with the other cool projects in Cloud Native.
-- Since the site puts your README front and center, it's a good way to learn how to write a good README, learn some marketing, finding your audience, etc. 
-
-[Discussion Thread](https://universal-blue.discourse.group/t/listing-your-custom-image-on-artifacthub/6446)
-
-# Justfile Documentation
-
-The `Justfile` contains various commands and configurations for building and managing container images and virtual machine images using Podman and other utilities.
-To use it, you must have installed [just](https://just.systems/man/en/introduction.html) from your package manager or manually. It is available by default on all Universal Blue images.
-
-## Environment Variables
-
-- `image_name`: The name of the image (default: "image-template").
-- `default_tag`: The default tag for the image (default: "latest").
-- `bib_image`: The Bootc Image Builder (BIB) image (default: "quay.io/centos-bootc/bootc-image-builder:latest").
-
-## Building The Image
-
-### `just build`
-
-Builds a container image using Podman.
+Build one variant, or all of them:
 
 ```bash
-just build $target_image $tag
+just build                       # defenestraos
+just build defenestraos-nvidia   # any image from the Variants table
+just build-desktop               # the three desktop variants
+just build-all                   # everything
 ```
 
-Arguments:
-- `$target_image`: The tag you want to apply to the image (default: `$image_name`).
-- `$tag`: The tag for the image (default: `$default_tag`).
+Images are tagged `localhost/<image>:latest`. Set `BASE_TAG` to build on a Bazzite tag other than `stable`.
 
-## Building and Running Virtual Machines and ISOs
-
-The below commands all build QCOW2 images. To produce or use a different type of image, substitute in the command with that type in the place of `qcow2`. The available types are `qcow2`, `iso`, and `raw`.
-
-### `just build-qcow2`
-
-Builds a QCOW2 virtual machine image.
+Build the installer ISO from an image you have already built. The ISO lands in `output/`.
 
 ```bash
-just build-qcow2 $target_image $tag
+just build-live-iso
+just run-vm-live-iso
 ```
 
-### `just rebuild-qcow2`
-
-Rebuilds a QCOW2 virtual machine image.
+Build and boot a disk image in a virtual machine:
 
 ```bash
-just rebuild-vm $target_image $tag
+just build-qcow2
+just run-vm-qcow2
 ```
 
-### `just run-vm-qcow2`
-
-Runs a virtual machine from a QCOW2 image.
+Before committing:
 
 ```bash
-just run-vm-qcow2 $target_image $tag
+just check    # Justfile syntax
+just lint     # shellcheck
+just format   # shfmt
 ```
-
-### `just spawn-vm`
-
-Runs a virtual machine using systemd-vmspawn.
-
-```bash
-just spawn-vm rebuild="0" type="qcow2" ram="6G"
-```
-
-## File Management
-
-### `just check`
-
-Checks the syntax of all `.just` files and the `Justfile`.
-
-### `just fix`
-
-Fixes the syntax of all `.just` files and the `Justfile`.
-
-### `just clean`
-
-Cleans the repository by removing build artifacts.
-
-### `just lint`
-
-Runs shell check on all Bash scripts.
-
-### `just format`
-
-Runs shfmt on all Bash scripts.
-
-## Additional resources
-
-For additional driver support, ublue maintains a set of scripts and container images available at [ublue-akmod](https://github.com/ublue-os/akmods). These images include the necessary scripts to install multiple kernel drivers within the container (Nvidia, OpenRazer, Framework...). The documentation provides guidance on how to properly integrate these drivers into your container image.
-
-## Community Examples
-
-These are images derived from this template (or similar enough to this template). Reference them when building your image!
-
-- [m2Giles' OS](https://github.com/m2giles/m2os)
-- [bOS](https://github.com/bsherman/bos)
-- [Homer](https://github.com/bketelsen/homer/)
-- [Amy OS](https://github.com/astrovm/amyos)
-- [VeneOS](https://github.com/Venefilyn/veneos)
