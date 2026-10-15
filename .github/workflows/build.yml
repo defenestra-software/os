@@ -53,10 +53,10 @@ jobs:
         id: env
         run: |
           IMAGE_REGISTRY="${{ env.IMAGE_REGISTRY }}"
-          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
+          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> "${GITHUB_ENV}"
 
           TARGET="${{ matrix.target }}"
-          echo "IMAGE_NAME=${TARGET}" >> ${GITHUB_ENV}
+          echo "IMAGE_NAME=${TARGET}" >> "${GITHUB_ENV}"
 
           # Derive pretty name for image metadata
           case "$TARGET" in
@@ -67,7 +67,7 @@ jobs:
             defenestraos-handheld-nvidia)      PRETTY="defenestraOS Handheld NVIDIA" ;;
             defenestraos-handheld-nvidia-open) PRETTY="defenestraOS Handheld NVIDIA Open" ;;
           esac
-          echo "VERSION_PRETTY=${PRETTY}" >> ${GITHUB_ENV}
+          echo "VERSION_PRETTY=${PRETTY}" >> "${GITHUB_ENV}"
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -123,16 +123,16 @@ jobs:
             defenestraos-handheld-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
             defenestraos-handheld-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
           esac
-          echo "BASE_DIGEST=$(skopeo inspect --format '{{.Digest}}' docker://${BASE})" >> "$GITHUB_ENV"
-          echo "BASE_VERSION=$(skopeo inspect --format '{{ index .Labels "org.opencontainers.image.version" }}' docker://${BASE})" >> "$GITHUB_ENV"
+          echo "BASE_DIGEST=$(skopeo inspect --format '{{.Digest}}' "docker://${BASE}")" >> "$GITHUB_ENV"
+          echo "BASE_VERSION=$(skopeo inspect --format '{{ index .Labels "org.opencontainers.image.version" }}' "docker://${BASE}")" >> "$GITHUB_ENV"
 
       - name: Get current date
         if: steps.freshness.outputs.skip != 'true'
         id: date
         run: |
-          echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
           # Identifies the build, not the channel.
-          echo "build_id=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+          echo "build_id=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
 
       - name: Image Metadata
         if: steps.freshness.outputs.skip != 'true'

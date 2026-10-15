@@ -85,10 +85,12 @@ jobs:
             echo "resolved ${image}:${FROM_TAG} -> ${digest}"
           done
 
-          echo "### Promoted \`${FROM_TAG}\` to \`${TO_TAG}\`" >> "${GITHUB_STEP_SUMMARY}"
-          echo "" >> "${GITHUB_STEP_SUMMARY}"
-          echo "| Image | Digest |" >> "${GITHUB_STEP_SUMMARY}"
-          echo "| --- | --- |" >> "${GITHUB_STEP_SUMMARY}"
+          {
+            echo "### Promoted \`${FROM_TAG}\` to \`${TO_TAG}\`"
+            echo ""
+            echo "| Image | Digest |"
+            echo "| --- | --- |"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
           for image in ${IMAGES}; do
             repo="${IMAGE_REGISTRY}/${image}"

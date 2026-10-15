@@ -92,9 +92,9 @@ jobs:
         id: check_mnt
         run: |
           if sudo mountpoint /mnt; then
-            echo "mnt_is_there=1" >>$GITHUB_OUTPUT
+            echo "mnt_is_there=1" >> "$GITHUB_OUTPUT"
           else
-            echo "mnt_is_there=0" >>$GITHUB_OUTPUT
+            echo "mnt_is_there=0" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Free Disk Space (Ubuntu)
@@ -155,7 +155,7 @@ jobs:
         run: |
           # The payload ref is what the installed system tracks
           # (titanoboa_hook_postrootfs.sh runs `bootc switch $ref:$tag`)
-          echo "tag=stable" >> $GITHUB_OUTPUT
+          echo "tag=stable" >> "$GITHUB_OUTPUT"
 
       - name: Lowercase Registry
         id: registry_case
@@ -170,7 +170,7 @@ jobs:
         id: get-base-ref
         run: |
           # Live session runtime is always the plain desktop image
-          echo "ref=defenestraos" >> $GITHUB_OUTPUT
+          echo "ref=defenestraos" >> "$GITHUB_OUTPUT"
 
       - name: Login to GitHub Container Registry
         run: |
@@ -215,12 +215,12 @@ jobs:
         run: |
           ISO_UPLOAD_DIR=${{ github.workspace }}/upload
           ISO_PATH=${{ steps.build.outputs.iso-dest }}
-          ISO_NAME=$(basename ${ISO_PATH})
+          ISO_NAME=$(basename "${ISO_PATH}")
 
-          mkdir -p ${ISO_UPLOAD_DIR}
-          mv ${ISO_PATH} ${ISO_UPLOAD_DIR}
-          (cd ${ISO_UPLOAD_DIR} && sha256sum ${ISO_NAME} | tee ${ISO_NAME}-CHECKSUM)
-          echo "iso-upload-dir=${ISO_UPLOAD_DIR}" >> $GITHUB_OUTPUT
+          mkdir -p "${ISO_UPLOAD_DIR}"
+          mv "${ISO_PATH}" "${ISO_UPLOAD_DIR}"
+          (cd "${ISO_UPLOAD_DIR}" && sha256sum "${ISO_NAME}" | tee "${ISO_NAME}-CHECKSUM")
+          echo "iso-upload-dir=${ISO_UPLOAD_DIR}" >> "$GITHUB_OUTPUT"
 
       - name: Upload ISOs and Checksum to Job Artifacts
         if: github.event_name != 'pull_request'
