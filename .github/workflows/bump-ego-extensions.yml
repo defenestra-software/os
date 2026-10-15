@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+---
+name: Bump extensions.gnome.org pins
+
+on:
+  schedule:
+    - cron: "17 7 * * *" # 07:17 UTC (01:17 CST / 02:17 CDT) every day
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: Open a PR per newer EGO version
+    runs-on: ubuntu-24.04
+    env:
+      # PRs opened with GITHUB_TOKEN don't trigger build.yml. A token in
+      # PACKAGING_BOT_TOKEN (contents + pull-requests write) gets the image build check.
+      GH_TOKEN: ${{ secrets.PACKAGING_BOT_TOKEN || github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ secrets.PACKAGING_BOT_TOKEN || github.token }}
+
+      - name: Bump each pin on its own branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          mapfile -t uuids < <(awk '$1 == "install_ego_extension" { print $2 }' build_files/install-defenestra.sh)
+          failed=0
+          for uuid in "${uuids[@]}"; do
+            branch="ego-bump/${uuid%%@*}"
+            git checkout -q -B "$branch" origin/main
+
+            rc=0
+            .github/scripts/bump-ego-extension.sh "$uuid" > "$RUNNER_TEMP/body.md" || rc=$?
+            if [ "$rc" -eq 10 ]; then
+              continue
+            elif [ "$rc" -ne 0 ]; then
+              echo "::error::bump failed for ${uuid}"
+              failed=1
+              continue
+            fi
+
+            version="$(awk -v u="$uuid" '$1 == "install_ego_extension" && $2 == u { print $3 }' build_files/install-defenestra.sh)"
+            title="Bump ${uuid} to EGO v${version}"
+
+            # Skip versions already offered, including closed PRs. A newer version gets a new PR.
+            prs="$(gh pr list --head "$branch" --state all --json number,state,title)"
+            if jq -e --arg t "$title" 'any(.[]; .title == $t)' <<<"$prs" >/dev/null; then
+              echo "${title}: already offered"
+              continue
+            fi
+            open="$(jq -r 'map(select(.state == "OPEN")) | .[0].number // empty' <<<"$prs")"
+
+            git commit -q -am "$title"
+            git push -q --force origin "$branch"
+            if [ -n "$open" ]; then
+              gh pr edit "$open" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            else
+              gh pr create --base main --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            fi
+          done
+          exit "$failed"
