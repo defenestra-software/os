@@ -199,6 +199,18 @@ else
     echo ":: No system_files to overlay (skeleton build)."
 fi
 
+# sysusers does not change the ID of an existing group.
+systemd-sysusers /usr/lib/sysusers.d/defenestra-plugdev.conf
+plugdev_gid="$(getent group plugdev | cut -d: -f3)"
+if [ "$plugdev_gid" != 46 ]; then
+    if awk -F: '$3 == 46' /usr/lib/group /etc/group | grep -q .; then
+        echo ":: gid 46 is already taken, cannot renumber plugdev" >&2
+        exit 1
+    fi
+    sed -i "s/^plugdev:x:${plugdev_gid}:/plugdev:x:46:/" /usr/lib/group /etc/group
+    find / -xdev -gid "$plugdev_gid" -exec chgrp -h 46 {} +
+fi
+
 BUNDLED_EXT_SRC="/ctx/system_files/usr/share/gnome-shell/extensions"
 BUNDLED_EXT_DST="/usr/share/gnome-shell/extensions"
 
