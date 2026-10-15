@@ -8,8 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}
@@ -19,20 +18,28 @@ jobs:
   bump:
     name: Open a PR per newer EGO version
     runs-on: ubuntu-24.04
-    env:
-      # PRs opened with GITHUB_TOKEN don't trigger build.yml. A token in
-      # PACKAGING_BOT_TOKEN (contents + pull-requests write) gets the image build check.
-      GH_TOKEN: ${{ secrets.PACKAGING_BOT_TOKEN || github.token }}
     steps:
+      # Pushes and PRs made with GITHUB_TOKEN don't trigger build.yml; the app's token does.
+      - name: Get defenestra-bot token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PACKAGING_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.PACKAGING_BOT_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.PACKAGING_BOT_TOKEN || github.token }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Bump each pin on its own branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bot_id="$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
 
           mapfile -t uuids < <(awk '$1 == "install_ego_extension" { print $2 }' build_files/install-defenestra.sh)
           failed=0
