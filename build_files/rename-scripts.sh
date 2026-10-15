@@ -132,7 +132,8 @@ for dir in "${sed_dirs[@]}"; do
             -e 's/bazzite-neofetch/defenestra-fastfetch/g' \
             -e 's/bazzite-cli\.Brewfile/defenestra-cli.Brewfile/g' \
             -e 's/bazzite_detect_nvidia_support_status/defenestra_detect_nvidia_support_status/g' \
-            -e 's|/usr/share/ublue-os/bazzite/|/usr/share/defenestra/steam-videos/|g' \
+            -e 's| -c /usr/share/ublue-os/bazzite/fastfetch\.jsonc||g' \
+            -e 's|/usr/share/ublue-os/bazzite/\([a-z-]*\.webm\)|/usr/share/defenestra/steam-videos/\1|g' \
             -e 's|bazzite-suspend-oled\.webm|defenestra-suspend-oled.webm|g' \
             -e 's|bazzite-suspend\.webm|defenestra-suspend.webm|g' \
             -e 's|bazzite-oled\.webm|defenestra-oled.webm|g' \
