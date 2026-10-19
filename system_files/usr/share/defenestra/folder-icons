@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Entries use <path><TAB><icon>[<TAB><gettext domain>].
+# Paths are relative to $HOME or begin with an XDG_*_DIR key from user-dirs.dirs.
+# A gettext domain translates the final path component.
+XDG_PROJECTS_DIR	folder-projects
+snap	folder-snap
+go	folder-go
+AppImages	folder-appimage
+Games	folder-games
+Android	folder-android
+Arduino	folder-arduino
+Bitwig Studio	folder-bitwig
+R	folder-r
+Dropbox	folder-dropbox
+Nextcloud	folder-nextcloud
+MEGA	folder-mega
+OneDrive	folder-onedrive
+XDG_DOCUMENTS_DIR/MuseScore4	folder-musescore
+XDG_DOCUMENTS_DIR/plugdata	folder-plugdata
+XDG_DOCUMENTS_DIR/PlatformIO	folder-platformio
+XDG_PICTURES_DIR/Camera	folder-camera
+XDG_VIDEOS_DIR/Camera	folder-camera
+XDG_PICTURES_DIR/Screenshots	folder-screenshot	gnome-shell
+XDG_VIDEOS_DIR/Screencasts	folder-screencast	gnome-shell

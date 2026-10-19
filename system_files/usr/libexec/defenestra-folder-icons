@@ -1,0 +1,38 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -euo pipefail
+
+LIST=/usr/share/defenestra/folder-icons
+SET=/usr/libexec/defenestra-folder-icon
+
+while IFS=$'\t' read -r path icon domain; do
+    [[ -n "${path}" && "${path}" != \#* ]] || continue
+
+    if [[ "${path}" == XDG_* ]]; then
+        key="${path%%/*}"
+        key="${key#XDG_}"
+        base="$(xdg-user-dir "${key%_DIR}")"
+        # Avoid setting $HOME's icon when the key is unset.
+        [[ "${base}" != "${HOME}" ]] || continue
+        rest="${path#"${path%%/*}"}"
+    else
+        base="${HOME}"
+        rest="/${path}"
+    fi
+    if [[ -n "${domain}" ]]; then
+        rest="${rest%/*}/$(TEXTDOMAIN="${domain}" gettext "${rest##*/}")"
+    fi
+    dir="${base}${rest}"
+
+    if [[ -d "${dir}" ]]; then
+        "${SET}" "${dir}" "${icon}"
+        continue
+    fi
+
+    unit="defenestra-folder-icon-$(systemd-escape -- "${path}")"
+    systemctl --user stop "${unit}.path" "${unit}.service" 2>/dev/null || true
+    systemd-run --user --quiet --unit="${unit}" \
+        --path-property=PathExists="${dir}" \
+        --service-type=oneshot --property=RemainAfterExit=yes \
+        -- "${SET}" "${dir}" "${icon}"
+done <"${LIST}"

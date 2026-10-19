@@ -16,12 +16,10 @@ install -Dm644 /ctx/system_files/etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra \
 install -Dm644 /ctx/system_files/etc/yum.repos.d/defenestra.repo \
     /etc/yum.repos.d/defenestra.repo
 
-# Images pulled from our registry must contain a cosign signature from the
-# CI's key. It must also contain registries.d/defenestra.yaml, or no
-# signature will be found.
+# Verify registry images with Defenestra's CI signing key.
 install -Dm644 /ctx/cosign.pub /etc/pki/containers/defenestra.pub
 
-# Offline backup key
+# Accept images signed with the offline recovery key.
 install -Dm644 /ctx/cosign-backup.pub /etc/pki/containers/defenestra-backup.pub
 jq '.transports.docker["ghcr.io/defenestra-software"] = [{
         "type": "sigstoreSigned",
@@ -45,13 +43,13 @@ dnf5 -y install \
 
 dnf5 -y install gnome-initial-setup nautilus-python
 
-# xdg-user-dirs before 0.20 has no Projects entry.
+# xdg-user-dirs 0.19 lacks a PROJECTS entry.
 grep -q '^PROJECTS=' /etc/xdg/user-dirs.defaults || echo 'PROJECTS=Projects' >>/etc/xdg/user-dirs.defaults
 
 dnf5 -y install zsh
 
-# linuxbrew UID < 1000: gnome-initial-setup hides system users.
-# Mask upstream brew-* units; defenestra-brew-* own the lifecycle as linuxbrew.
+# gnome-initial-setup hides Linuxbrew because its UID is below 1000.
+# Defenestra manages Linuxbrew through its own units.
 systemd-sysusers /ctx/system_files/usr/lib/sysusers.d/defenestra-linuxbrew.conf
 systemctl mask brew-setup.service brew-update.service brew-update.timer \
     brew-upgrade.service brew-upgrade.timer 2>/dev/null || true
@@ -59,7 +57,7 @@ systemctl mask brew-setup.service brew-update.service brew-update.timer \
 dnf5 -y install toolbox
 
 # mesa-libOpenCL conflicts with ROCm's OpenCL ICD.
-# install_weak_deps=False keeps compute libs, skips test/debug recommends.
+# Skip weak test and debug dependencies while keeping the requested compute libraries.
 dnf5 -y remove mesa-libOpenCL
 dnf5 -y --setopt=install_weak_deps=False install \
     rocm-opencl \
@@ -97,7 +95,7 @@ dnf5 -y install \
 
 dnf5 -y install simple-scan
 
-# Installed, off by default; enabled per user/org policy.
+# Enable these per user or organization policy.
 dnf5 -y install \
     usbguard \
     usbguard-notifier \
@@ -136,8 +134,8 @@ mkdir -p /usr/share/factory/var/nix
 cp -a /nix/. /usr/share/factory/var/nix/
 rm -rf /nix/*
 
-# Fedora has no /nix SELinux policy; nix.pp also allows init_t to read default_t
-# lnk_file (socket activation traverses the store symlink). Load from /ctx: overlay runs later.
+# Fedora has no SELinux policy for /nix. nix.pp lets init_t traverse store links
+# during socket activation. Load it from /ctx because overlays run later.
 semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
 # Factory copy only; first-boot defenestra-nix-store-relabel relabels the live store.
 restorecon -RF /usr/share/factory/var/nix
@@ -187,7 +185,6 @@ flatpak remote-add --if-not-exists --from defenestra \
     https://my.defenestra.io/downloads/defenestra.flatpakrepo
 
 if [ -d /ctx/system_files ] && [ "$(ls -A /ctx/system_files 2>/dev/null)" ]; then
-    # nvidia overlay is conditional; extensions handled below.
     rsync -av --exclude='usr/share/gnome-shell/extensions' --exclude='nvidia' /ctx/system_files/ /
     echo ":: System files overlaid."
 
@@ -283,7 +280,6 @@ fi
 dnf5 -y remove glib2-devel
 
 command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
-# Pin extensions.gnome.org builds and compile schemas
 install_ego_extension() {
     local uuid="$1" version="$2" sha256="$3"
     local url="https://extensions.gnome.org/extension-data/${uuid//@/}.v${version}.shell-extension.zip"
@@ -322,8 +318,7 @@ rm -rf "${MOREWAITA_TMP}"
 gtk-update-icon-cache -q -f "${MOREWAITA_DST}"
 /ctx/build_files/gen-icon-theme.sh /usr/share/icons/Adwaita "${MOREWAITA_DST}" /usr/share/icons/Defenestra
 
-# NVIDIA Vulkan ICD in /etc/vulkan/icd.d with a bare soname. Two copies of
-# libGLX_nvidia in one process segfault in glcore.
+# NVIDIA's ICD uses a bare soname. Loading two libGLX_nvidia copies segfaults glcore.
 if [ -e /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json ]; then
     mkdir -p /etc/vulkan/icd.d
     sed -E 's|("library_path"[[:space:]]*:[[:space:]]*")[^"]*libGLX_nvidia\.so\.0"|\1libGLX_nvidia.so.0"|' \
@@ -331,8 +326,8 @@ if [ -e /usr/share/vulkan/icd.d/nvidia_icd.x86_64.json ]; then
     rm -f /usr/share/vulkan/icd.d/nvidia_icd.*.json
 fi
 
-# Pin nixpkgs rev for defenestra-opengl-provision. Use stable channel since
-# Mesa needs newer glibc otherwise nix apps fails to load. Bump each NixOS release.
+# Use the current stable NixOS channel. Mesa needs its newer glibc.
+# Update this with each NixOS release.
 mkdir -p /usr/share/defenestra
 curl -fsSL https://channels.nixos.org/nixos-26.05/git-revision \
     >/usr/share/defenestra/opengl-nixpkgs-rev
@@ -341,7 +336,7 @@ systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true
 systemctl enable nix-daemon.socket 2>/dev/null || true
-# nsncd: Nix binaries resolve host sssd/FreeIPA identities.
+# Nix binaries need host SSSD and FreeIPA identities.
 systemctl enable nsncd.service 2>/dev/null || true
 systemctl enable defenestra-opengl-provision.service 2>/dev/null || true
 systemctl enable defenestra-opengl-provision.path 2>/dev/null || true
@@ -370,21 +365,21 @@ systemctl enable defenestra-flatpak-manager.service 2>/dev/null || true
 systemctl enable defenestra-hardware-setup.service 2>/dev/null || true
 systemctl --global enable defenestra-dynamic-fixes.service 2>/dev/null || true
 systemctl --global enable defenestra-user-setup.service 2>/dev/null || true
-systemctl --global enable defenestra-projects-icon.service 2>/dev/null || true
+systemctl --global enable defenestra-folder-icons.service 2>/dev/null || true
 
-# DNS-SD only: cups (UDP/631) is CVE-2024-47176.
+# Restrict discovery to DNS-SD. CUPS' UDP/631 listener is affected by CVE-2024-47176.
 grep -qx 'BrowseRemoteProtocols none' /etc/cups/cups-browsed.conf
 sed -i 's/^BrowseRemoteProtocols none$/BrowseRemoteProtocols dnssd/' /etc/cups/cups-browsed.conf
 cat >>/etc/cups/cups-browsed.conf <<'EOF'
 
-# ColorModel=RGB so everywhere-PPD color printers aren't stuck greyscale.
+# Keep PPD-defined color printers from defaulting to grayscale.
 CreateIPPPrinterQueues Driverless
 DefaultOptions ColorModel=RGB
 EOF
 systemctl enable cups-browsed.service 2>/dev/null || true
 systemctl enable defenestra-cups-browsed-resume.service 2>/dev/null || true
 
-# Deck-only units; harmless no-op on desktop variants.
+# These services no-op outside Steam Deck systems.
 systemctl enable defenestra-tdpfix.service 2>/dev/null || true
 systemctl enable defenestra-autologin.service 2>/dev/null || true
 
