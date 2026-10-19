@@ -296,8 +296,8 @@ install_ego_extension() {
     rm -rf "${tmp}"
 }
 
-install_ego_extension tilingshell@ferrarodomenico.com 76 \
-    0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35
+install_ego_extension tilingshell@ferrarodomenico.com 77 \
+    17ab42f990d9b55f66009f50089ca172c62d206b03d0534ac5d9b63cf44e1cd1
 install_ego_extension gnome-mosaic@jardon.github.com 19 \
     7a4f657f2029504b5eec500690225e011aaab27ef10e7630b9a8b1ce155e6ebd
 install_ego_extension paperwm@paperwm.github.com 148 \
