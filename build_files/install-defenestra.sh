@@ -308,6 +308,8 @@ install_ego_extension paperwm@paperwm.github.com 148 \
     2cef72ed7e31df4962584b52dabda9246c0ae81973b05f8d1202d9dbe9a3f794
 install_ego_extension space-bar@luchrioh 40 \
     13e025ba4ac95ec5f0795b159a4edf83b58b80e2db9d6d575be6f4e4a605b9d2
+install_ego_extension Move_Clock@rmy.pobox.com 36 \
+    9c62ae35c027caa33dcfe33de66134236c6d739255150b0b563ff47a45879c7f
 
 MOREWAITA_COMMIT="8ee561313b9737fa960d75ce2ac91846b4576df7"
 MOREWAITA_SHA256="599d8cecaef0fac3c46df5d448748854fbc7cbe851f5a911c7018befdb060c42"

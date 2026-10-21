@@ -9,7 +9,9 @@ case $- in
         if [ -n "${BASH_VERSION-}" ]; then
             eval "$(direnv hook bash)"
         elif [ -n "${ZSH_VERSION-}" ]; then
-            eval "$(direnv hook zsh)"
+            # /etc/zshrc sources profile.d under `emulate -L ksh`, which cannot
+            # parse the hook's zsh array subscripts.
+            emulate zsh -c "$(direnv hook zsh)"
         fi
     fi
     ;;
