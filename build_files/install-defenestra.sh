@@ -140,6 +140,8 @@ semodule -i /ctx/system_files/usr/share/selinux/packages/defenestra/nix.pp
 # Factory copy only; first-boot defenestra-nix-store-relabel relabels the live store.
 restorecon -RF /usr/share/factory/var/nix
 
+dnf5 -y install direnv
+
 # Off by default. Classic snaps hardcode /snap.
 dnf5 -y install snapd
 if ! rpm -q --qf '%{RELEASE}\n' snapd | grep -q defenestra; then
