@@ -292,6 +292,8 @@ install_ego_extension() {
     echo "${sha256}  ${tmp}/ext.zip" | sha256sum -c -
     mkdir -p "${dst}"
     unzip -q -o "${tmp}/ext.zip" -d "${dst}"
+    # Set read permission for extensions
+    chmod -R a+rX "${dst}"
     if [ -d "${dst}/schemas" ]; then
         glib-compile-schemas "${dst}/schemas"
     fi
@@ -304,6 +306,8 @@ install_ego_extension gnome-mosaic@jardon.github.com 21 \
     1999567581bd59cd28f4e5159f551cdbda0b3573e1991e23d423eb244ad5f6ad
 install_ego_extension paperwm@paperwm.github.com 148 \
     2cef72ed7e31df4962584b52dabda9246c0ae81973b05f8d1202d9dbe9a3f794
+install_ego_extension space-bar@luchrioh 40 \
+    13e025ba4ac95ec5f0795b159a4edf83b58b80e2db9d6d575be6f4e4a605b9d2
 
 MOREWAITA_COMMIT="8ee561313b9737fa960d75ce2ac91846b4576df7"
 MOREWAITA_SHA256="599d8cecaef0fac3c46df5d448748854fbc7cbe851f5a911c7018befdb060c42"
