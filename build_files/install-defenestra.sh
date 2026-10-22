@@ -8,7 +8,8 @@ dnf5 -y copr enable defenestra/defenestra
 dnf5 -y install --refresh defenestra-chassis nsncd \
     gnome-shell-extension-hanabi \
     looking-glass-client \
-    snapd
+    snapd \
+    defenestra-arsenal
 dnf5 -y copr disable defenestra/defenestra
 
 install -Dm644 /ctx/system_files/etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra \
@@ -31,7 +32,7 @@ jq '.transports.docker["ghcr.io/defenestra-software"] = [{
     }]' /etc/containers/policy.json >/tmp/policy.json
 mv /tmp/policy.json /etc/containers/policy.json
 dnf5 -y install --enable-repo=defenestra defenestra-store defenestra-store-services \
-    hyperpane-display defenestra-arsenal
+    hyperpane-display
 
 dnf5 -y install \
     gnome-shell-extension-dash-to-panel \
