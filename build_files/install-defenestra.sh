@@ -341,6 +341,7 @@ mkdir -p /usr/share/defenestra
 curl -fsSL https://channels.nixos.org/nixos-26.05/git-revision \
     >/usr/share/defenestra/opengl-nixpkgs-rev
 
+systemctl enable defenestra-home-migrate.service 2>/dev/null || true
 systemctl enable defenestra-nix-reseed.service 2>/dev/null || true
 systemctl enable nix.mount 2>/dev/null || true
 systemctl enable defenestra-nix-store-relabel.service 2>/dev/null || true

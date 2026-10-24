@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Move passwd homes from /home to /var/home
+After=local-fs.target
+Before=systemd-logind.service systemd-user-sessions.service
+ConditionPathIsSymbolicLink=/home
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-home-migrate
+
+[Install]
+WantedBy=multi-user.target

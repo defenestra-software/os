@@ -1,0 +1,22 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Rewrites passwd homes /home/<user> → /var/home/<user>
+# for rebase installs from Bazzite and other Universal Blue images.
+
+set -euo pipefail
+
+uid_min=$(awk '$1 == "UID_MIN" {print $2}' /etc/login.defs)
+uid_max=$(awk '$1 == "UID_MAX" {print $2}' /etc/login.defs)
+: "${uid_min:=1000}" "${uid_max:=60000}"
+
+while IFS=: read -r name _ uid _ _ home _; do
+    [ "$uid" -ge "$uid_min" ] && [ "$uid" -le "$uid_max" ] || continue
+    case "$home" in /home/*) ;; *) continue ;; esac
+    target="/var${home}"
+    [ "$home" -ef "$target" ] || continue
+    if usermod -d "$target" "$name"; then
+        echo "$name: $home -> $target"
+    else
+        echo "$name: usermod failed, left at $home" >&2
+    fi
+done </etc/passwd
