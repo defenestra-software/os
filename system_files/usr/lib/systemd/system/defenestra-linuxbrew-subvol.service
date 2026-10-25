@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Convert /var/home/linuxbrew to a btrfs subvolume
+After=local-fs.target systemd-tmpfiles-setup.service
+Before=systemd-logind.service systemd-user-sessions.service defenestra-brew-setup.service
+ConditionDirectoryNotEmpty=/var/home/linuxbrew
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/defenestra-linuxbrew-subvol
+
+[Install]
+WantedBy=multi-user.target

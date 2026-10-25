@@ -356,6 +356,7 @@ systemctl enable docker.socket 2>/dev/null || true
 
 systemctl --global enable snapd.session-agent.socket 2>/dev/null || true
 
+systemctl enable defenestra-linuxbrew-subvol.service 2>/dev/null || true
 systemctl enable defenestra-brew-setup.service 2>/dev/null || true
 systemctl enable defenestra-verify-image.service 2>/dev/null || true
 systemctl enable defenestra-brew-zsh-completions.service 2>/dev/null || true

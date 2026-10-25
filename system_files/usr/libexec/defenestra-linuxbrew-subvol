@@ -1,0 +1,36 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Converts a plain /var/home/linuxbrew into a btrfs subvolume
+
+set -euo pipefail
+
+dir=/var/home/linuxbrew
+new="${dir}.subvol"
+
+[ "$(stat -f -c %T "$dir")" = btrfs ] || exit 0
+# A subvolume's root directory is always inode 256.
+[ "$(stat -c %i "$dir")" -eq 256 ] && exit 0
+
+# Leftover from an interrupted run; the original is still in place.
+if [ -e "$new" ]; then
+    btrfs subvolume delete "$new" >/dev/null 2>&1 || rm -rf "$new"
+fi
+
+trap 'btrfs subvolume delete "$new" >/dev/null 2>&1 || true' ERR
+
+btrfs subvolume create "$new" >/dev/null
+cp -a --reflink=always "$dir/." "$new/"
+chown --reference="$dir" "$new"
+chmod --reference="$dir" "$new"
+chcon --reference="$dir" "$new"
+
+listing() { (cd "$1" && find . -printf '%y %s %u:%g %m %p\n' | sort | sha256sum); }
+if [ "$(listing "$dir")" != "$(listing "$new")" ]; then
+    echo "copy does not match $dir, left unchanged" >&2
+    false
+fi
+
+trap - ERR
+mv --exchange -T "$new" "$dir"
+rm -rf "$new"
+echo "$dir is now a btrfs subvolume"

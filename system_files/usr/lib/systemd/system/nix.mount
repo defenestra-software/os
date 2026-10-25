@@ -11,7 +11,7 @@ ConditionPathIsDirectory=/var/nix
 What=/var/nix
 Where=/nix
 Type=none
-Options=bind
+Options=bind,x-gvfs-hide
 
 [Install]
 WantedBy=sysinit.target
