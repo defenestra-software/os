@@ -5,7 +5,7 @@ export base_tag := env("BASE_TAG", "stable")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
 # All available build targets
-targets := "defenestraos defenestraos-nvidia defenestraos-nvidia-open defenestraos-handheld defenestraos-handheld-nvidia defenestraos-handheld-nvidia-open"
+targets := "defenestraos defenestraos-nvidia defenestraos-nvidia-open defenestraos-deck defenestraos-deck-nvidia defenestraos-deck-nvidia-open"
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -76,7 +76,7 @@ sudoif command *args:
 # Build a single variant. Examples:
 #   just build                       # defenestraos (AMD/Intel desktop)
 #   just build defenestraos-nvidia   # NVIDIA closed desktop
-# just build defenestraos-handheld # handheld AMD/Intel
+# just build defenestraos-deck # handheld AMD/Intel
 build $target=image_name $tag=default_tag:
     #!/usr/bin/env bash
     set -euo pipefail

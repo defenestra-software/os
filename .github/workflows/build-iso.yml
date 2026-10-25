@@ -83,7 +83,7 @@ jobs:
           - defenestraos
           - defenestraos-nvidia
           - defenestraos-nvidia-open
-          - defenestraos-handheld
+          - defenestraos-deck
     steps:
       - name: Show disk space
         run: sudo df -h

@@ -24,7 +24,7 @@ jobs:
             defenestraos
             defenestraos-nvidia
             defenestraos-nvidia-open
-            defenestraos-handheld
+            defenestraos-deck
           cut-off: 90d
           image-tags: '!latest !stable !beta !canary'
           tag-selection: 'both'

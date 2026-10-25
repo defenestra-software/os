@@ -65,7 +65,7 @@ Every variant is published to `ghcr.io/defenestra-software` and has its own inst
 | `defenestraos` | Desktops and laptops with AMD or Intel graphics |
 | `defenestraos-nvidia` | NVIDIA graphics, proprietary driver |
 | `defenestraos-nvidia-open` | NVIDIA graphics, open kernel modules |
-| `defenestraos-handheld` | Handhelds with AMD or Intel graphics |
+| `defenestraos-deck` | Handhelds with AMD or Intel graphics |
 
 Each image has three channels, used as the image tag:
 
@@ -96,7 +96,7 @@ Choose the installer ISO that matches your hardware, write it to a USB drive, an
 | AMD or Intel graphics | [defenestraos](https://os.defenestra.io/iso/latest/defenestraos-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-stable-live-amd64.iso-CHECKSUM) |
 | NVIDIA RTX, or GTX 16xx series and newer | [defenestraos-nvidia-open](https://os.defenestra.io/iso/latest/defenestraos-nvidia-open-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-nvidia-open-stable-live-amd64.iso-CHECKSUM) |
 | NVIDIA GTX 9xx to 10xx series | [defenestraos-nvidia](https://os.defenestra.io/iso/latest/defenestraos-nvidia-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-nvidia-stable-live-amd64.iso-CHECKSUM) |
-| Handhelds with AMD or Intel graphics | [defenestraos-handheld](https://os.defenestra.io/iso/latest/defenestraos-handheld-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-handheld-stable-live-amd64.iso-CHECKSUM) |
+| Handhelds with AMD or Intel graphics | [defenestraos-deck](https://os.defenestra.io/iso/latest/defenestraos-deck-stable-live-amd64.iso) | [SHA-256](https://os.defenestra.io/iso/latest/defenestraos-deck-stable-live-amd64.iso-CHECKSUM) |
 
 Each ISO is 6 to 8 GB. To check a download, save the checksum file next to the ISO and run:
 

@@ -42,11 +42,11 @@ jobs:
           - defenestraos
           - defenestraos-nvidia
           - defenestraos-nvidia-open
-          - defenestraos-handheld
-          # defenestraos-handheld-nvidia - disabled: no NVIDIA handheld hardware exists currently
-          # - defenestraos-handheld-nvidia
-          # defenestraos-handheld-nvidia-open - disabled: no NVIDIA handheld hardware + Bazzite missing stable tag
-          # - defenestraos-handheld-nvidia-open
+          - defenestraos-deck
+          # defenestraos-deck-nvidia - disabled: no NVIDIA handheld hardware exists currently
+          # - defenestraos-deck-nvidia
+          # defenestraos-deck-nvidia-open - disabled: no NVIDIA handheld hardware + Bazzite missing stable tag
+          # - defenestraos-deck-nvidia-open
 
     steps:
       - name: Prepare environment
@@ -63,9 +63,9 @@ jobs:
             defenestraos)                      PRETTY="defenestraOS" ;;
             defenestraos-nvidia)               PRETTY="defenestraOS NVIDIA" ;;
             defenestraos-nvidia-open)          PRETTY="defenestraOS NVIDIA Open" ;;
-            defenestraos-handheld)             PRETTY="defenestraOS Handheld" ;;
-            defenestraos-handheld-nvidia)      PRETTY="defenestraOS Handheld NVIDIA" ;;
-            defenestraos-handheld-nvidia-open) PRETTY="defenestraOS Handheld NVIDIA Open" ;;
+            defenestraos-deck)             PRETTY="defenestraOS Handheld" ;;
+            defenestraos-deck-nvidia)      PRETTY="defenestraOS Handheld NVIDIA" ;;
+            defenestraos-deck-nvidia-open) PRETTY="defenestraOS Handheld NVIDIA Open" ;;
           esac
           echo "VERSION_PRETTY=${PRETTY}" >> "${GITHUB_ENV}"
 
@@ -91,9 +91,9 @@ jobs:
             defenestraos)                 BASE="ghcr.io/ublue-os/bazzite-gnome:stable" ;;
             defenestraos-nvidia)          BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia:stable" ;;
             defenestraos-nvidia-open)     BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia-open:stable" ;;
-            defenestraos-handheld)        BASE="ghcr.io/ublue-os/bazzite-deck-gnome:stable" ;;
-            defenestraos-handheld-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
-            defenestraos-handheld-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
+            defenestraos-deck)        BASE="ghcr.io/ublue-os/bazzite-deck-gnome:stable" ;;
+            defenestraos-deck-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
+            defenestraos-deck-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
           esac
 
           NEW=$(skopeo inspect --format '{{.Digest}}' "docker://${BASE}")
@@ -119,9 +119,9 @@ jobs:
             defenestraos)                 BASE="ghcr.io/ublue-os/bazzite-gnome:stable" ;;
             defenestraos-nvidia)          BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia:stable" ;;
             defenestraos-nvidia-open)     BASE="ghcr.io/ublue-os/bazzite-gnome-nvidia-open:stable" ;;
-            defenestraos-handheld)        BASE="ghcr.io/ublue-os/bazzite-deck-gnome:stable" ;;
-            defenestraos-handheld-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
-            defenestraos-handheld-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
+            defenestraos-deck)        BASE="ghcr.io/ublue-os/bazzite-deck-gnome:stable" ;;
+            defenestraos-deck-nvidia) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:stable" ;;
+            defenestraos-deck-nvidia-open) BASE="ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:stable" ;;
           esac
           echo "BASE_DIGEST=$(skopeo inspect --format '{{.Digest}}' "docker://${BASE}")" >> "$GITHUB_ENV"
           echo "BASE_VERSION=$(skopeo inspect --format '{{ index .Labels "org.opencontainers.image.version" }}' "docker://${BASE}")" >> "$GITHUB_ENV"

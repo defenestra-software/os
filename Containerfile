@@ -4,18 +4,18 @@
 #   defenestraos                      desktop, AMD/Intel
 #   defenestraos-nvidia               desktop, NVIDIA closed (GTX 10xx+)
 #   defenestraos-nvidia-open          desktop, NVIDIA open (RTX 20xx+)
-#   defenestraos-handheld             handheld/deck, AMD/Intel
-#   defenestraos-handheld-nvidia      handheld/deck, NVIDIA closed
-#   defenestraos-handheld-nvidia-open handheld/deck, NVIDIA open
+#   defenestraos-deck             handheld/deck, AMD/Intel
+#   defenestraos-deck-nvidia      handheld/deck, NVIDIA closed
+#   defenestraos-deck-nvidia-open handheld/deck, NVIDIA open
 
 ARG BASE_TAG="${BASE_TAG:-stable}"
 
 ARG BASE_DESKTOP="${BASE_DESKTOP:-ghcr.io/ublue-os/bazzite-gnome:${BASE_TAG}}"
 ARG BASE_DESKTOP_NVIDIA="${BASE_DESKTOP_NVIDIA:-ghcr.io/ublue-os/bazzite-gnome-nvidia:${BASE_TAG}}"
 ARG BASE_DESKTOP_NVIDIA_OPEN="${BASE_DESKTOP_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-gnome-nvidia-open:${BASE_TAG}}"
-ARG BASE_HANDHELD="${BASE_HANDHELD:-ghcr.io/ublue-os/bazzite-deck-gnome:${BASE_TAG}}"
-ARG BASE_HANDHELD_NVIDIA="${BASE_HANDHELD_NVIDIA:-ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:${BASE_TAG}}"
-ARG BASE_HANDHELD_NVIDIA_OPEN="${BASE_HANDHELD_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:${BASE_TAG}}"
+ARG BASE_DECK="${BASE_DECK:-ghcr.io/ublue-os/bazzite-deck-gnome:${BASE_TAG}}"
+ARG BASE_DECK_NVIDIA="${BASE_DECK_NVIDIA:-ghcr.io/ublue-os/bazzite-deck-nvidia-gnome:${BASE_TAG}}"
+ARG BASE_DECK_NVIDIA_OPEN="${BASE_DECK_NVIDIA_OPEN:-ghcr.io/ublue-os/bazzite-deck-nvidia-open-gnome:${BASE_TAG}}"
 
 FROM scratch AS ctx
 COPY build_files /build_files
@@ -91,12 +91,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
-FROM ${BASE_HANDHELD} AS defenestraos-handheld
+FROM ${BASE_DECK} AS defenestraos-deck
 
-ARG IMAGE_NAME="defenestraos-handheld"
+ARG IMAGE_NAME="defenestraos-deck"
 ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
-ARG IMAGE_VARIANT="handheld"
+ARG IMAGE_VARIANT="deck"
 ARG VERSION_TAG="${VERSION_TAG}"
 ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS Handheld}"
 
@@ -114,12 +114,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
-FROM ${BASE_HANDHELD_NVIDIA} AS defenestraos-handheld-nvidia
+FROM ${BASE_DECK_NVIDIA} AS defenestraos-deck-nvidia
 
-ARG IMAGE_NAME="defenestraos-handheld-nvidia"
+ARG IMAGE_NAME="defenestraos-deck-nvidia"
 ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
-ARG IMAGE_VARIANT="handheld-nvidia"
+ARG IMAGE_VARIANT="deck-nvidia"
 ARG VERSION_TAG="${VERSION_TAG}"
 ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS Handheld NVIDIA}"
 
@@ -137,12 +137,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 RUN --mount=type=tmpfs,target=/run --network=none bootc container lint
 
-FROM ${BASE_HANDHELD_NVIDIA_OPEN} AS defenestraos-handheld-nvidia-open
+FROM ${BASE_DECK_NVIDIA_OPEN} AS defenestraos-deck-nvidia-open
 
-ARG IMAGE_NAME="defenestraos-handheld-nvidia-open"
+ARG IMAGE_NAME="defenestraos-deck-nvidia-open"
 ARG IMAGE_VENDOR="defenestra"
 ARG IMAGE_BRANCH="${IMAGE_BRANCH:-main}"
-ARG IMAGE_VARIANT="handheld-nvidia-open"
+ARG IMAGE_VARIANT="deck-nvidia-open"
 ARG VERSION_TAG="${VERSION_TAG}"
 ARG VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS Handheld NVIDIA Open}"
 
