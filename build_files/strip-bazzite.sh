@@ -98,6 +98,43 @@ rm -f /usr/lib/tmpfiles.d/bazzite-libvirt.conf
 rm -f /usr/share/ublue-os/just/84-bazzite-virt.just
 sed -i '\|/usr/share/ublue-os/just/84-bazzite-virt.just|d' /usr/share/ublue-os/justfile
 
+# Drops a just script with its comments, attributes, and aliases.
+strip_justscript() {
+      local file="/usr/share/ublue-os/just/$1" name="$2"
+      grep -q "^${name}[ :]" "$file"
+      awk -v name="$name" '
+            function flush() { if (held != "") printf "%s", held; held = "" }
+            skip && /^[^ \t]/ { skip = 0 }
+            skip { next }
+            $0 ~ "^alias [^ ]+ := " name "$" { flush(); next }
+            $0 ~ "^" name "[ :]" { held = ""; skip = 1; next }
+            /^(#|\[)/ { held = held $0 "\n"; next }
+            { flush(); print }
+            END { flush() }
+      ' "$file" >"$file.new"
+      mv "$file.new" "$file"
+}
+
+strip_justscript 10-update.just changelogs
+strip_justscript 10-update.just changelogs-testing
+strip_justscript 00-default.just toggle-user-motd
+strip_justscript 80-bazzite.just bazzite-cli
+strip_justscript 91-bazzite-decky.just get-decky-bazzite-buddy
+strip_justscript 82-bazzite-apps.just resilio-sync
+sed -i '\|docs.projectbluefin.io|d' /usr/share/ublue-os/justfile
+
+rm -f /usr/share/ublue-os/just/94-bazzite-protonplus.just
+sed -i '\|/usr/share/ublue-os/just/94-bazzite-protonplus.just|d' /usr/share/ublue-os/justfile
+
+rm -f /usr/share/ublue-os/just/86-bazzite-windows.just
+sed -i '\|/usr/share/ublue-os/just/86-bazzite-windows.just|d' /usr/share/ublue-os/justfile
+
+# Deck only ujust scripts
+if [[ "${IMAGE_VARIANT:-}" != deck* ]]; then
+      rm -f /usr/share/ublue-os/just/95-bazzite-deck-session.just
+      sed -i '\|/usr/share/ublue-os/just/95-bazzite-deck-session.just|d' /usr/share/ublue-os/justfile
+fi
+
 # Disable before rename; install-defenestra.sh re-enables the new names.
 systemctl disable bazzite-flatpak-manager.service 2>/dev/null || true
 systemctl disable bazzite-hardware-setup.service 2>/dev/null || true
