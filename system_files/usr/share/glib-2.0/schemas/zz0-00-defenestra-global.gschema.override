@@ -26,6 +26,10 @@ allow-updates=true
 download-updates=true
 download-updates-notify=false
 
+# Disable GNOME 49+ donation reminder
+[org.gnome.settings-daemon.plugins.housekeeping]
+donation-reminder-enabled=false
+
 [org.gnome.Ptyxis]
 restore-session=false
 restore-window-size=false
