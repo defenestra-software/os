@@ -17,6 +17,10 @@ fi
 # A subvolume's root directory is always inode 256.
 [ "$(stat -c %i "$dir")" -eq 256 ] && exit 0
 
+# Display message on splash to says why the boot is slow.
+plymouth display-message --text="Migrating Homebrew" 2>/dev/null || true
+trap 'plymouth hide-message --text="Migrating Homebrew" 2>/dev/null || true' EXIT
+
 trap 'btrfs subvolume delete "$new" >/dev/null 2>&1 || true' ERR
 
 btrfs subvolume create "$new" >/dev/null
@@ -25,7 +29,7 @@ chown --reference="$dir" "$new"
 chmod --reference="$dir" "$new"
 chcon --reference="$dir" "$new"
 
-listing() { (cd "$1" && find . -printf '%y %s %u:%g %m %p\n' | sort | sha256sum); }
+listing() { (cd "$1" && find . -printf '%y %s %U:%G %m %p\n' | sort | sha256sum); }
 if [ "$(listing "$dir")" != "$(listing "$new")" ]; then
     echo "copy does not match $dir, left unchanged" >&2
     false
