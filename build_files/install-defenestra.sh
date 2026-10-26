@@ -130,7 +130,7 @@ mkdir -p /etc/modules-load.d
 echo iptable_nat >/etc/modules-load.d/defenestra-docker.conf
 
 # Store in /var/nix; nix.mount binds it onto /nix at boot.
-dnf5 -y install nix nix-daemon busybox
+dnf5 -y install nix nix-daemon nix-legacy busybox
 mkdir -p /usr/share/factory/var/nix
 cp -a /nix/. /usr/share/factory/var/nix/
 rm -rf /nix/*
