@@ -106,23 +106,14 @@ sha256sum -c defenestraos-stable-live-amd64.iso-CHECKSUM
 
 ## Rebasing
 
-A machine already running Fedora Atomic or a Universal Blue image can switch to defenestraOS without reinstalling. Your home directory and Flatpaks are kept.
-
-Rebase to the unsigned reference first. This brings in the defenestraOS signing key and policy.
+A machine already running Fedora Atomic or a Universal Blue image can switch to defenestraOS without reinstalling. Your home directory, Brew packages, and Flatpaks are kept.
 
 ```bash
 rpm-ostree rebase ostree-unverified-registry:ghcr.io/defenestra-software/defenestraos:stable
 systemctl reboot
 ```
 
-Then rebase to the signed reference, so every later update is verified before it is applied:
-
-```bash
-rpm-ostree rebase ostree-image-signed:docker://ghcr.io/defenestra-software/defenestraos:stable
-systemctl reboot
-```
-
-Replace `defenestraos` with another image from the [Variants](#variants) table, or `stable` with another channel, as needed.
+Replace `defenestraos` with another image from the [Variants](#variants) table, or `stable` with another channel, as needed. On the first boot, the system switches itself to the signed reference, so every later update is verified before it is applied. The first boot runs a one-time setup that migrates Homebrew to a BTFS subvolume, this can take several minutes.
 
 ## Verification
 

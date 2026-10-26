@@ -8,13 +8,14 @@ dir=/var/home/linuxbrew
 new="${dir}.subvol"
 
 [ "$(stat -f -c %T "$dir")" = btrfs ] || exit 0
-# A subvolume's root directory is always inode 256.
-[ "$(stat -c %i "$dir")" -eq 256 ] && exit 0
 
-# Leftover from an interrupted run; the original is still in place.
+# Clean up leftovers from an interrupted run, a partial copy, or the old tree
 if [ -e "$new" ]; then
     btrfs subvolume delete "$new" >/dev/null 2>&1 || rm -rf "$new"
 fi
+
+# A subvolume's root directory is always inode 256.
+[ "$(stat -c %i "$dir")" -eq 256 ] && exit 0
 
 trap 'btrfs subvolume delete "$new" >/dev/null 2>&1 || true' ERR
 
