@@ -1,7 +1,7 @@
 [Unit]
 Description=defenestraOS Homebrew first-boot setup
 ConditionPathExists=/usr/share/homebrew.tar.zst
-ConditionPathExists=!/var/home/linuxbrew/.linuxbrew/bin/brew
+ConditionPathExists=!/var/home/linuxbrew/.linuxbrew/Homebrew/bin/brew
 After=local-fs.target
 Wants=network-online.target
 

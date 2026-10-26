@@ -3,6 +3,7 @@
 Description=Convert /var/home/linuxbrew to a btrfs subvolume
 After=local-fs.target systemd-tmpfiles-setup.service
 Before=systemd-logind.service systemd-user-sessions.service defenestra-brew-setup.service
+Before=store-system.service defenestra-brew-zsh-completions.service
 ConditionPathExists=/var/home/linuxbrew/.linuxbrew
 
 [Service]
