@@ -26,6 +26,10 @@ allow-updates=true
 download-updates=true
 download-updates-notify=false
 
+# Idle suspend on battery only
+[org.gnome.settings-daemon.plugins.power]
+sleep-inactive-ac-type='nothing'
+
 # Disable GNOME 49+ donation reminder
 [org.gnome.settings-daemon.plugins.housekeeping]
 donation-reminder-enabled=false
