@@ -164,7 +164,31 @@ if [[ ":Jupiter:Galileo:" =~ ":\$SYS_ID:" ]]; then
 fi
 
 mokutil --timeout -1 || :
-echo -e "\$ENROLLMENT_PASSWORD\n\$ENROLLMENT_PASSWORD" | mokutil --import "\$SECUREBOOT_KEY" || :
+if echo -e "\$ENROLLMENT_PASSWORD\n\$ENROLLMENT_PASSWORD" | mokutil --import "\$SECUREBOOT_KEY"; then
+    # The kernel has only ublue signatures, so skipping enrollment leaves
+    # it unbootable while Secure Boot is enabled.
+    { MOK_MSG="\$(</dev/stdin)"; } << 'MOKEOF'
+<span size="x-large">One more step after restarting</span>
+
+When the computer restarts, a blue <b>Perform MOK management</b> screen appears.
+This lets your computer trust defenestraOS when Secure Boot is on.
+
+    1. Use the arrow keys and Enter to choose <b>Enroll MOK</b>, then <b>Continue</b>, then <b>Yes</b>.
+    2. Type the password for your keyboard and press Enter:
+            Most keyboards (QWERTY, QWERTZ):    <b>universalblue</b>
+            French or Belgian (AZERTY):              <b>universqlblue</b>
+        The password may not show while you type; that's normal.
+    3. Choose <b>Reboot</b>.
+
+If you skip this screen, defenestraOS will not start while Secure Boot is on.
+MOKEOF
+    run0 --user=liveuser yad \
+        --on-top \
+        --center \
+        --title="Secure Boot" \
+        --text="\$MOK_MSG" \
+        --button="I understand":0 || :
+fi
 %end
 EOF
 
