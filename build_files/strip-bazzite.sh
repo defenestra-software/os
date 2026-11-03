@@ -41,6 +41,8 @@ rm -f /usr/bin/bruh
 
 rm -rf /usr/share/ublue-os/bazaar/
 
+rm -rf /usr/share/gnome-shell/extensions/bazaar-integration@kolunmi.github.io/
+
 # Steam Deck branding: Valve trademark/copyright. ublue.png/ublue.xml stay (base lineage).
 dnf5 remove -y --noautoremove steamdeck-backgrounds
 rm -rf /usr/share/backgrounds/steamdeck/
