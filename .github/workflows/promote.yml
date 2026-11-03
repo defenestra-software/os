@@ -115,14 +115,14 @@ jobs:
           done
 
   build-iso:
-    name: Rebuild stable ISOs
+    name: Rebuild ${{ inputs.to }} ISOs
     needs: promote
-    if: inputs.to == 'stable'
     permissions:
       contents: read
       packages: read
       id-token: write
     uses: ./.github/workflows/build-iso.yml
     with:
+      tag: ${{ inputs.to }}
       publish: true
     secrets: inherit
