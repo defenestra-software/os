@@ -96,6 +96,16 @@ dnf5 -y install \
 
 dnf5 -y install simple-scan
 
+# Add Razer device support disabled unless the user enables it from Arsenal
+dnf5 -y install --enable-repo=terra openrazer-daemon
+
+# Add displaylink.service for DisplayLink so they work out of the box.
+dnf5 -y install --enable-repo=fedora-multimedia displaylink
+
+# Patch for DisplayLink suspend
+sed -i '1a systemctl -q is-active displaylink.service || exit 0' \
+    /usr/lib/systemd/system-sleep/displaylink
+
 # Enable these per user or organization policy.
 dnf5 -y install \
     usbguard \

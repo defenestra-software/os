@@ -121,6 +121,8 @@ strip_justscript 00-default.just toggle-user-motd
 strip_justscript 80-bazzite.just bazzite-cli
 strip_justscript 91-bazzite-decky.just get-decky-bazzite-buddy
 strip_justscript 82-bazzite-apps.just resilio-sync
+strip_justscript 82-bazzite-apps.just install-displaylink
+strip_justscript 82-bazzite-apps.just install-openrazer
 sed -i '\|docs.projectbluefin.io|d' /usr/share/ublue-os/justfile
 
 rm -f /usr/share/ublue-os/just/94-bazzite-protonplus.just
