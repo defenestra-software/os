@@ -6,7 +6,6 @@ echo ":: Installing defenestraOS packages..."
 
 dnf5 -y copr enable defenestra/defenestra
 dnf5 -y install --refresh defenestra-chassis nsncd \
-    gnome-shell-extension-hanabi \
     looking-glass-client \
     snapd \
     defenestra-arsenal
@@ -31,7 +30,7 @@ jq '.transports.docker["ghcr.io/defenestra-software"] = [{
         "signedIdentity": {"type": "matchRepository"}
     }]' /etc/containers/policy.json >/tmp/policy.json
 mv /tmp/policy.json /etc/containers/policy.json
-dnf5 -y install --enable-repo=defenestra defenestra-store defenestra-store-services \
+dnf5 -y install --enable-repo=defenestra defenestra-store \
     hyperpane-display
 
 dnf5 -y install \
@@ -236,13 +235,6 @@ if [ -d "${BUNDLED_EXT_SRC}/store-integration@defenestra.io" ]; then
     cp -r "${BUNDLED_EXT_SRC}/store-integration@defenestra.io" "${BUNDLED_EXT_DST}/"
 fi
 
-if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
-    cp -r "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" "${BUNDLED_EXT_DST}/"
-    if [ -d "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas" ]; then
-        glib-compile-schemas "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas"
-    fi
-fi
-
 command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
 install_ego_extension() {
     local uuid="$1" version="$2" sha256="$3"
@@ -280,6 +272,8 @@ install_ego_extension AlphabeticalAppGrid@stuarthayhurst 46 \
     e40a1620093da42729b3ed8602147b36d1da95341325b78561f6278bc1211701
 install_ego_extension tiling-assistant@leleat-on-github 56 \
     bd4ec3320cfa53aafa7a63d6f0fbc7642ee4afb4d29abc416fed9e43a9378c30
+install_ego_extension clipboard-indicator@tudmotu.com 72 \
+    6dfc41cf3a42b8a7613c7758895dc6812f96610b3b03a1a7a79ab324d9feef58
 
 MOREWAITA_COMMIT="8ee561313b9737fa960d75ce2ac91846b4576df7"
 MOREWAITA_SHA256="599d8cecaef0fac3c46df5d448748854fbc7cbe851f5a911c7018befdb060c42"

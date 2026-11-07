@@ -1,3 +1,0 @@
-[submodule "system_files/usr/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com"]
-	path = system_files/usr/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com
-	url = https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git

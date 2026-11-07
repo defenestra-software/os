@@ -67,15 +67,6 @@ fi
 
 rm -f /etc/dconf/db/distro.d/10-bazzite-deck-silverblue-logomenu 2>/dev/null || true
 
-# Bazzite's bluez 5.87 (git.7950.32d2ebd9.dirty) segfaults in device_found_callback
-# on LE discovery. Drop this distro-sync once their build stops crashing.
-dnf5 versionlock delete bluez bluez-libs bluez-obexd bluez-cups
-dnf5 -y distro-sync --repo=fedora --repo=updates 'bluez*'
-if rpm -q bluez | grep -q bazzite; then
-      echo "ERROR: bluez is still bazzite's build after distro-sync"
-      exit 1
-fi
-
 # Overrides ship via system_files overlay.
 rm -f /usr/share/glib-2.0/schemas/zz0-*bazzite*.gschema.override 2>/dev/null || true
 
