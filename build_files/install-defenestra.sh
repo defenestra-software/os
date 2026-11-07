@@ -208,18 +208,6 @@ else
     echo ":: No system_files to overlay (skeleton build)."
 fi
 
-# sysusers does not change the ID of an existing group.
-systemd-sysusers /usr/lib/sysusers.d/defenestra-plugdev.conf
-plugdev_gid="$(getent group plugdev | cut -d: -f3)"
-if [ "$plugdev_gid" != 46 ]; then
-    if awk -F: '$3 == 46' /usr/lib/group /etc/group | grep -q .; then
-        echo ":: gid 46 is already taken, cannot renumber plugdev" >&2
-        exit 1
-    fi
-    sed -i "s/^plugdev:x:${plugdev_gid}:/plugdev:x:46:/" /usr/lib/group /etc/group
-    find / -xdev -gid "$plugdev_gid" -exec chgrp -h 46 {} +
-fi
-
 BUNDLED_EXT_SRC="/ctx/system_files/usr/share/gnome-shell/extensions"
 BUNDLED_EXT_DST="/usr/share/gnome-shell/extensions"
 
@@ -352,6 +340,11 @@ DefaultOptions ColorModel=RGB
 EOF
 systemctl enable cups-browsed.service 2>/dev/null || true
 systemctl enable defenestra-cups-browsed-resume.service 2>/dev/null || true
+
+# Fixed Fedora's passwd stack missing pam_oo7, which results in a password change leaving the login keyring locked.
+grep -qx -e $'-password   optional\tpam_gnome_keyring.so use_authtok' /etc/pam.d/passwd
+if grep -q pam_oo7 /etc/pam.d/passwd; then exit 1; fi
+sed -i $'/pam_gnome_keyring.so use_authtok$/a -password   optional\tpam_oo7.so use_authtok' /etc/pam.d/passwd
 
 # These services no-op outside Steam Deck systems.
 systemctl enable defenestra-tdpfix.service 2>/dev/null || true
