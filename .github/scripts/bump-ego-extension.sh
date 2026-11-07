@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Match the GNOME Shell major in the base image. Update it at each Fedora rebase.
-GNOME_SHELL_VERSION="${GNOME_SHELL_VERSION:-50}"
+GNOME_SHELL_VERSION="${GNOME_SHELL_VERSION:-51}"
 
 UUID="${1:?usage: $0 <uuid>}"
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -17,7 +17,7 @@ if [ -z "${CUR:-}" ]; then
 fi
 
 INFO="$(curl -fsSL "${EGO}/extension-info/?uuid=${UUID}&shell_version=${GNOME_SHELL_VERSION}")"
-NEW="$(jq -r '.version' <<<"$INFO")"
+NEW="$(jq -r --arg v "$GNOME_SHELL_VERSION" 'if .shell_version_map | has($v) then .version else empty end' <<<"$INFO")"
 if ! [[ "$NEW" =~ ^[0-9]+$ ]]; then
     echo "bump: no EGO version of ${UUID} for GNOME ${GNOME_SHELL_VERSION}" >&2
     exit 1
@@ -37,7 +37,7 @@ awk -v u="$UUID" -v v="$NEW" -v s="$SHA" '
     $1 == "install_ego_extension" && $2 == u { print $1 " " u " " v " \\"; sha = 1; next }
     sha { sub(/[0-9a-f]{64}/, s); sha = 0 }
     { print }
-' "$SCRIPT" > "${TMP}/script" && cat "${TMP}/script" > "$SCRIPT"
+' "$SCRIPT" >"${TMP}/script" && cat "${TMP}/script" >"$SCRIPT"
 
 created() {
     curl -fsSL "${EGO}/api/v1/extensions/${UUID}/versions/$1/" | jq -r '.created | split(".")[0]' 2>/dev/null || echo unknown

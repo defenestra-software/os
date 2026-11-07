@@ -1,15 +1,3 @@
-[submodule "system_files/usr/share/gnome-shell/extensions/arcmenu@arcmenu.com"]
-	path = system_files/usr/share/gnome-shell/extensions/arcmenu@arcmenu.com
-	url = https://gitlab.com/arcmenu/ArcMenu.git
 [submodule "system_files/usr/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com"]
 	path = system_files/usr/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com
 	url = https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git
-[submodule "system_files/usr/share/gnome-shell/extensions/ding@rastersoft.com"]
-	path = system_files/usr/share/gnome-shell/extensions/ding@rastersoft.com
-	url = https://gitlab.com/rastersoft/desktop-icons-ng.git
-[submodule "system_files/usr/share/gnome-shell/extensions/AlphabeticalAppGrid@stuarthayhurst"]
-	path = system_files/usr/share/gnome-shell/extensions/AlphabeticalAppGrid@stuarthayhurst
-	url = https://github.com/stuarthayhurst/alphabetical-grid-extension.git
-[submodule "system_files/usr/share/gnome-shell/extensions/tiling-assistant@leleat-on-github"]
-	path = system_files/usr/share/gnome-shell/extensions/tiling-assistant@leleat-on-github
-	url = https://github.com/Leleat/Tiling-Assistant.git

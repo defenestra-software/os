@@ -224,8 +224,6 @@ fi
 BUNDLED_EXT_SRC="/ctx/system_files/usr/share/gnome-shell/extensions"
 BUNDLED_EXT_DST="/usr/share/gnome-shell/extensions"
 
-dnf5 -y install glib2-devel
-
 if [ -d "${BUNDLED_EXT_SRC}/no-startup-overview@defenestra.io" ]; then
     cp -r "${BUNDLED_EXT_SRC}/no-startup-overview@defenestra.io" "${BUNDLED_EXT_DST}/"
 fi
@@ -244,53 +242,6 @@ if [ -d "${BUNDLED_EXT_SRC}/clipboard-indicator@tudmotu.com" ]; then
         glib-compile-schemas "${BUNDLED_EXT_DST}/clipboard-indicator@tudmotu.com/schemas"
     fi
 fi
-
-# ArcMenu ships src/ nested; flatten to the extension root.
-if [ -d "${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com" ]; then
-    ARCMENU_SRC="${BUNDLED_EXT_SRC}/arcmenu@arcmenu.com"
-    ARCMENU_DST="${BUNDLED_EXT_DST}/arcmenu@arcmenu.com"
-    mkdir -p "${ARCMENU_DST}/data"
-    cp -r "${ARCMENU_SRC}/src"/* "${ARCMENU_DST}/"
-    cp "${ARCMENU_SRC}/metadata.json" "${ARCMENU_DST}/"
-    cp "${ARCMENU_SRC}/LICENSE" "${ARCMENU_DST}/"
-    cp -r "${ARCMENU_SRC}/schemas" "${ARCMENU_DST}/"
-    cp -r "${ARCMENU_SRC}/data/icons" "${ARCMENU_DST}/data/"
-    cp "${ARCMENU_SRC}/data/resources.gresource.xml" "${ARCMENU_DST}/data/"
-    glib-compile-resources --sourcedir="${ARCMENU_DST}/data" "${ARCMENU_DST}/data/resources.gresource.xml"
-    glib-compile-schemas "${ARCMENU_DST}/schemas"
-fi
-
-if [ -d "${BUNDLED_EXT_SRC}/ding@rastersoft.com" ]; then
-    DING_SRC="${BUNDLED_EXT_SRC}/ding@rastersoft.com"
-    DING_DST="${BUNDLED_EXT_DST}/ding@rastersoft.com"
-    mkdir -p "${DING_DST}"
-    rsync -a \
-        --exclude='.git' --exclude='debian' --exclude='meson.build' \
-        --exclude='meson_post_install.py' --exclude='*.sh' --exclude='kill.py' \
-        --exclude='HISTORY.md' --exclude='README.md' --exclude='apparmor' \
-        "${DING_SRC}/" "${DING_DST}/"
-    glib-compile-schemas "${DING_DST}/schemas"
-fi
-
-# tiling-assistant ships nested in a same-named subdir.
-if [ -d "${BUNDLED_EXT_SRC}/tiling-assistant@leleat-on-github/tiling-assistant@leleat-on-github" ]; then
-    TA_SRC="${BUNDLED_EXT_SRC}/tiling-assistant@leleat-on-github/tiling-assistant@leleat-on-github"
-    TA_DST="${BUNDLED_EXT_DST}/tiling-assistant@leleat-on-github"
-    mkdir -p "${TA_DST}"
-    cp -r "${TA_SRC}"/. "${TA_DST}/"
-    glib-compile-schemas "${TA_DST}/schemas"
-fi
-
-# alphabetical-app-grid ships nested under extension/.
-if [ -d "${BUNDLED_EXT_SRC}/AlphabeticalAppGrid@stuarthayhurst/extension" ]; then
-    AAG_SRC="${BUNDLED_EXT_SRC}/AlphabeticalAppGrid@stuarthayhurst/extension"
-    AAG_DST="${BUNDLED_EXT_DST}/AlphabeticalAppGrid@stuarthayhurst"
-    mkdir -p "${AAG_DST}"
-    cp -r "${AAG_SRC}"/. "${AAG_DST}/"
-    glib-compile-schemas "${AAG_DST}/schemas"
-fi
-
-dnf5 -y remove glib2-devel
 
 command -v unzip >/dev/null 2>&1 || dnf5 -y install unzip
 install_ego_extension() {
@@ -321,6 +272,14 @@ install_ego_extension space-bar@luchrioh 40 \
     13e025ba4ac95ec5f0795b159a4edf83b58b80e2db9d6d575be6f4e4a605b9d2
 install_ego_extension Move_Clock@rmy.pobox.com 36 \
     9c62ae35c027caa33dcfe33de66134236c6d739255150b0b563ff47a45879c7f
+install_ego_extension arcmenu@arcmenu.com 74 \
+    ef414c90dcb5f2b0c6ccb5f8e59fd9963c584789d3d8d26740ddb731100c4b40
+install_ego_extension ding@rastersoft.com 103 \
+    bf02bd17299ddac759566ccf6ef2dabb881d7cda615ca1b04a048d753fd1328d
+install_ego_extension AlphabeticalAppGrid@stuarthayhurst 46 \
+    e40a1620093da42729b3ed8602147b36d1da95341325b78561f6278bc1211701
+install_ego_extension tiling-assistant@leleat-on-github 56 \
+    bd4ec3320cfa53aafa7a63d6f0fbc7642ee4afb4d29abc416fed9e43a9378c30
 
 MOREWAITA_COMMIT="8ee561313b9737fa960d75ce2ac91846b4576df7"
 MOREWAITA_SHA256="599d8cecaef0fac3c46df5d448748854fbc7cbe851f5a911c7018befdb060c42"
@@ -371,8 +330,8 @@ systemctl enable defenestra-brew-setup.service 2>/dev/null || true
 systemctl enable defenestra-verify-image.service 2>/dev/null || true
 systemctl enable defenestra-brew-zsh-completions.service 2>/dev/null || true
 systemctl enable defenestra-brew-zsh-completions.path 2>/dev/null || true
-systemctl enable store-system.service 2>/dev/null || true
-systemctl --global enable store-user.service 2>/dev/null || true
+systemctl enable defenestra-store-system.service 2>/dev/null || true
+systemctl --global enable defenestra-store-user.service 2>/dev/null || true
 
 # Store owns OS and app updates.
 for unit in \

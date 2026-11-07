@@ -2,6 +2,6 @@
   "uuid": "no-startup-overview@defenestra.io",
   "name": "No Startup Overview",
   "description": "Skip GNOME activities overview on session startup.",
-  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "shell-version": ["45", "46", "47", "48", "49", "50", "51"],
   "url": "https://defenestra.io"
 }
