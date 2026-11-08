@@ -79,7 +79,8 @@ dnf5 -y install \
     waypipe \
     git-subtree \
     iotop \
-    trace-cmd
+    trace-cmd \
+    mutter-devkit
 
 dnf5 -y install \
     incus \

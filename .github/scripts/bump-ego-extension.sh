@@ -19,8 +19,8 @@ fi
 INFO="$(curl -fsSL "${EGO}/extension-info/?uuid=${UUID}&shell_version=${GNOME_SHELL_VERSION}")"
 NEW="$(jq -r --arg v "$GNOME_SHELL_VERSION" 'if .shell_version_map | has($v) then .version else empty end' <<<"$INFO")"
 if ! [[ "$NEW" =~ ^[0-9]+$ ]]; then
-    echo "bump: no EGO version of ${UUID} for GNOME ${GNOME_SHELL_VERSION}" >&2
-    exit 1
+    echo "::warning::bump: no EGO version of ${UUID} for GNOME ${GNOME_SHELL_VERSION}" >&2
+    exit 10
 fi
 echo "bump: ${UUID} ego=${NEW} pinned=${CUR}" >&2
 if [ "$NEW" -le "$CUR" ]; then
