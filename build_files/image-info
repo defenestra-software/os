@@ -11,7 +11,7 @@ VERSION_PRETTY="${VERSION_PRETTY:-defenestraOS}"
 
 echo ":: Writing OS identity: ${IMAGE_NAME} (${IMAGE_VARIANT})"
 
-cat > /usr/lib/os-release <<EOF
+cat >/usr/lib/os-release <<EOF
 NAME="defenestraOS"
 PRETTY_NAME="${VERSION_PRETTY}"
 ID=defenestraos
@@ -31,9 +31,14 @@ EOF
 # some tools read /etc/os-release
 ln -sf /usr/lib/os-release /etc/os-release
 
+# Bazzite rewrites this to "Bazzite release N"; bootupd takes the EFI boot
+# entry label from it and the installer creates the NVRAM entry.
+# Replace Bazzite with defenestraOS
+echo "defenestraOS release $(rpm -E %fedora)" >/usr/lib/fedora-release
+
 mkdir -p /usr/share/ublue-os
 
-cat > /usr/share/ublue-os/image-info.json <<EOF
+cat >/usr/share/ublue-os/image-info.json <<EOF
 {
   "image-name": "${IMAGE_NAME}",
   "image-vendor": "${IMAGE_VENDOR}",
