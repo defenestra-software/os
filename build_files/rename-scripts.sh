@@ -14,25 +14,25 @@ rename_file() {
     fi
 }
 
-rename_file /usr/libexec/bazzite-user-setup           /usr/libexec/defenestra-user-setup
+rename_file /usr/libexec/bazzite-user-setup /usr/libexec/defenestra-user-setup
 rename_file /usr/libexec/bazzite-privileged-user-setup /usr/libexec/defenestra-privileged-user-setup
-rename_file /usr/libexec/bazzite-hardware-setup        /usr/libexec/defenestra-hardware-setup
-rename_file /usr/libexec/bazzite-dynamic-fixes         /usr/libexec/defenestra-dynamic-fixes
-rename_file /usr/libexec/bazzite-flatpak-manager       /usr/libexec/defenestra-flatpak-manager
-rename_file /usr/libexec/bazzite-boot-remount          /usr/libexec/defenestra-boot-remount
-rename_file /usr/libexec/bazzite-bling-fastfetch       /usr/libexec/defenestra-bling-fastfetch
-rename_file /usr/libexec/bazzite-powersave             /usr/libexec/defenestra-powersave
-rename_file /usr/libexec/bazzite-snapper-config        /usr/libexec/defenestra-snapper-config
-rename_file /usr/libexec/bazzite-fetch-image           /usr/libexec/defenestra-fetch-image
+rename_file /usr/libexec/bazzite-hardware-setup /usr/libexec/defenestra-hardware-setup
+rename_file /usr/libexec/bazzite-dynamic-fixes /usr/libexec/defenestra-dynamic-fixes
+rename_file /usr/libexec/bazzite-flatpak-manager /usr/libexec/defenestra-flatpak-manager
+rename_file /usr/libexec/bazzite-boot-remount /usr/libexec/defenestra-boot-remount
+rename_file /usr/libexec/bazzite-bling-fastfetch /usr/libexec/defenestra-bling-fastfetch
+rename_file /usr/libexec/bazzite-powersave /usr/libexec/defenestra-powersave
+rename_file /usr/libexec/bazzite-snapper-config /usr/libexec/defenestra-snapper-config
+rename_file /usr/libexec/bazzite-fetch-image /usr/libexec/defenestra-fetch-image
 rename_file /usr/libexec/bazzite_detect_nvidia_support_status /usr/libexec/defenestra_detect_nvidia_support_status
-rename_file /usr/libexec/bazzite-tdpfix                /usr/libexec/defenestra-tdpfix
-rename_file /usr/libexec/bazzite-autologin             /usr/libexec/defenestra-autologin
+rename_file /usr/libexec/bazzite-tdpfix /usr/libexec/defenestra-tdpfix
+rename_file /usr/libexec/bazzite-autologin /usr/libexec/defenestra-autologin
 
-rename_file /usr/bin/bazzite-steam                     /usr/bin/defenestra-steam
-rename_file /usr/bin/bazzite-steam-bpm                 /usr/bin/defenestra-steam-bpm
-rename_file /usr/bin/bazzite-steam-brand               /usr/bin/defenestra-steam-brand
-rename_file /usr/bin/bazzite-rollback-helper            /usr/bin/defenestra-rollback-helper
-rename_file /usr/bin/bazzite-desktop-bootstrap         /usr/bin/defenestra-desktop-bootstrap
+rename_file /usr/bin/bazzite-steam /usr/bin/defenestra-steam
+rename_file /usr/bin/bazzite-steam-bpm /usr/bin/defenestra-steam-bpm
+rename_file /usr/bin/bazzite-steam-brand /usr/bin/defenestra-steam-brand
+rename_file /usr/bin/bazzite-rollback-helper /usr/bin/defenestra-rollback-helper
+rename_file /usr/bin/bazzite-desktop-bootstrap /usr/bin/defenestra-desktop-bootstrap
 
 # steam-brand no-ops until /usr/share/defenestra/steam-videos/ exists.
 if [ -f /usr/bin/defenestra-steam-brand ]; then
@@ -41,27 +41,38 @@ if [ -f /usr/bin/defenestra-steam-brand ]; then
 [ -d /usr/share/defenestra/steam-videos ] || exit 0' /usr/bin/defenestra-steam-brand
 fi
 
-rename_file /usr/lib/systemd/system/bazzite-hardware-setup.service   /usr/lib/systemd/system/defenestra-hardware-setup.service
-rename_file /usr/lib/systemd/system/bazzite-flatpak-manager.service  /usr/lib/systemd/system/defenestra-flatpak-manager.service
-rename_file /usr/lib/systemd/user/bazzite-dynamic-fixes.service      /usr/lib/systemd/user/defenestra-dynamic-fixes.service
-rename_file /usr/lib/systemd/user/bazzite-user-setup.service         /usr/lib/systemd/user/defenestra-user-setup.service
-rename_file /usr/lib/systemd/system/bazzite-tdpfix.service           /usr/lib/systemd/system/defenestra-tdpfix.service
-rename_file /usr/lib/systemd/system/bazzite-autologin.service        /usr/lib/systemd/system/defenestra-autologin.service
+rename_file /usr/lib/systemd/system/bazzite-hardware-setup.service /usr/lib/systemd/system/defenestra-hardware-setup.service
+rename_file /usr/lib/systemd/system/bazzite-flatpak-manager.service /usr/lib/systemd/system/defenestra-flatpak-manager.service
+rename_file /usr/lib/systemd/user/bazzite-dynamic-fixes.service /usr/lib/systemd/user/defenestra-dynamic-fixes.service
+rename_file /usr/lib/systemd/user/bazzite-user-setup.service /usr/lib/systemd/user/defenestra-user-setup.service
+
+# Patch system user services to not start as gdm or system users
+for unit in defenestra-dynamic-fixes defenestra-user-setup; do
+    f="/usr/lib/systemd/user/${unit}.service"
+    grep -qx 'WantedBy=default.target' "$f"
+    sed -i \
+        -e 's/^WantedBy=default\.target$/WantedBy=graphical-session-pre.target/' \
+        -e '/^\[Unit\]$/a ConditionEnvironment=XDG_SESSION_CLASS=user' \
+        "$f"
+done
+
+rename_file /usr/lib/systemd/system/bazzite-tdpfix.service /usr/lib/systemd/system/defenestra-tdpfix.service
+rename_file /usr/lib/systemd/system/bazzite-autologin.service /usr/lib/systemd/system/defenestra-autologin.service
 
 rename_file /usr/share/polkit-1/actions/org.bazzite.privileged.user.setup.policy \
-            /usr/share/polkit-1/actions/org.defenestra.privileged.user.setup.policy
+    /usr/share/polkit-1/actions/org.defenestra.privileged.user.setup.policy
 rename_file /usr/share/polkit-1/actions/org.bazzite.waydroid.policy \
-            /usr/share/polkit-1/actions/org.defenestra.waydroid.policy
+    /usr/share/polkit-1/actions/org.defenestra.waydroid.policy
 rename_file /usr/share/polkit-1/actions/org.bazzite.hhd.policy \
-            /usr/share/polkit-1/actions/org.defenestra.hhd.policy
+    /usr/share/polkit-1/actions/org.defenestra.hhd.policy
 rename_file /usr/share/polkit-1/actions/org.bazzite.rebase.policy \
-            /usr/share/polkit-1/actions/org.defenestra.rebase.policy
+    /usr/share/polkit-1/actions/org.defenestra.rebase.policy
 rename_file /usr/share/polkit-1/rules.d/bazzite-autologin.rules \
-            /usr/share/polkit-1/rules.d/defenestra-autologin.rules
+    /usr/share/polkit-1/rules.d/defenestra-autologin.rules
 
-rename_file /usr/share/ublue-os/firefox-config/01-bazzite-global.js  /usr/share/ublue-os/firefox-config/01-defenestra-global.js
-rename_file /usr/share/ublue-os/firefox-config/02-bazzite-nvidia.js  /usr/share/ublue-os/firefox-config/02-defenestra-nvidia.js
-rename_file /usr/share/ublue-os/firefox-config/03-bazzite-gnome.js   /usr/share/ublue-os/firefox-config/03-defenestra-gnome.js
+rename_file /usr/share/ublue-os/firefox-config/01-bazzite-global.js /usr/share/ublue-os/firefox-config/01-defenestra-global.js
+rename_file /usr/share/ublue-os/firefox-config/02-bazzite-nvidia.js /usr/share/ublue-os/firefox-config/02-defenestra-nvidia.js
+rename_file /usr/share/ublue-os/firefox-config/03-bazzite-gnome.js /usr/share/ublue-os/firefox-config/03-defenestra-gnome.js
 
 rename_file /etc/profile.d/bazzite-neofetch.sh /etc/profile.d/defenestra-fastfetch.sh
 rename_file /usr/share/fish/vendor_conf.d/bazzite-neofetch.fish /usr/share/fish/vendor_conf.d/defenestra-fastfetch.fish
@@ -111,34 +122,34 @@ for dir in "${sed_dirs[@]}"; do
         -o -name '*.fish' -o -name '*.conf' -o -name '*.toml' -o -name '*.Brewfile' \
         -o -name 'defenestra-*' -o -name '*-defenestra-*' \) \
         -exec sed -i \
-            -e 's/bazzite-steam-bpm/defenestra-steam-bpm/g' \
-            -e 's/bazzite-steam-brand/defenestra-steam-brand/g' \
-            -e 's/bazzite-steam/defenestra-steam/g' \
-            -e 's/bazzite-rollback-helper/defenestra-rollback-helper/g' \
-            -e 's/bazzite-desktop-bootstrap/defenestra-desktop-bootstrap/g' \
-            -e 's/bazzite-user-setup/defenestra-user-setup/g' \
-            -e 's/bazzite-privileged-user-setup/defenestra-privileged-user-setup/g' \
-            -e 's/bazzite-hardware-setup/defenestra-hardware-setup/g' \
-            -e 's/bazzite-dynamic-fixes/defenestra-dynamic-fixes/g' \
-            -e 's/bazzite-flatpak-manager/defenestra-flatpak-manager/g' \
-            -e 's/bazzite-boot-remount/defenestra-boot-remount/g' \
-            -e 's/bazzite-bling-fastfetch/defenestra-bling-fastfetch/g' \
-            -e 's/bazzite-powersave/defenestra-powersave/g' \
-            -e 's/bazzite-snapper-config/defenestra-snapper-config/g' \
-            -e 's/bazzite-fetch-image/defenestra-fetch-image/g' \
-            -e 's/bazzite-tdpfix/defenestra-tdpfix/g' \
-            -e 's/bazzite-autologin/defenestra-autologin/g' \
-            -e 's/org\.bazzite\./org.defenestra./g' \
-            -e 's/bazzite-neofetch/defenestra-fastfetch/g' \
-            -e 's/bazzite-cli\.Brewfile/defenestra-cli.Brewfile/g' \
-            -e 's/bazzite_detect_nvidia_support_status/defenestra_detect_nvidia_support_status/g' \
-            -e 's| -c /usr/share/ublue-os/bazzite/fastfetch\.jsonc||g' \
-            -e 's|/usr/share/ublue-os/bazzite/\([a-z-]*\.webm\)|/usr/share/defenestra/steam-videos/\1|g' \
-            -e 's|bazzite-suspend-oled\.webm|defenestra-suspend-oled.webm|g' \
-            -e 's|bazzite-suspend\.webm|defenestra-suspend.webm|g' \
-            -e 's|bazzite-oled\.webm|defenestra-oled.webm|g' \
-            -e 's|bazzite\.webm|defenestra.webm|g' \
-            {} +
+        -e 's/bazzite-steam-bpm/defenestra-steam-bpm/g' \
+        -e 's/bazzite-steam-brand/defenestra-steam-brand/g' \
+        -e 's/bazzite-steam/defenestra-steam/g' \
+        -e 's/bazzite-rollback-helper/defenestra-rollback-helper/g' \
+        -e 's/bazzite-desktop-bootstrap/defenestra-desktop-bootstrap/g' \
+        -e 's/bazzite-user-setup/defenestra-user-setup/g' \
+        -e 's/bazzite-privileged-user-setup/defenestra-privileged-user-setup/g' \
+        -e 's/bazzite-hardware-setup/defenestra-hardware-setup/g' \
+        -e 's/bazzite-dynamic-fixes/defenestra-dynamic-fixes/g' \
+        -e 's/bazzite-flatpak-manager/defenestra-flatpak-manager/g' \
+        -e 's/bazzite-boot-remount/defenestra-boot-remount/g' \
+        -e 's/bazzite-bling-fastfetch/defenestra-bling-fastfetch/g' \
+        -e 's/bazzite-powersave/defenestra-powersave/g' \
+        -e 's/bazzite-snapper-config/defenestra-snapper-config/g' \
+        -e 's/bazzite-fetch-image/defenestra-fetch-image/g' \
+        -e 's/bazzite-tdpfix/defenestra-tdpfix/g' \
+        -e 's/bazzite-autologin/defenestra-autologin/g' \
+        -e 's/org\.bazzite\./org.defenestra./g' \
+        -e 's/bazzite-neofetch/defenestra-fastfetch/g' \
+        -e 's/bazzite-cli\.Brewfile/defenestra-cli.Brewfile/g' \
+        -e 's/bazzite_detect_nvidia_support_status/defenestra_detect_nvidia_support_status/g' \
+        -e 's| -c /usr/share/ublue-os/bazzite/fastfetch\.jsonc||g' \
+        -e 's|/usr/share/ublue-os/bazzite/\([a-z-]*\.webm\)|/usr/share/defenestra/steam-videos/\1|g' \
+        -e 's|bazzite-suspend-oled\.webm|defenestra-suspend-oled.webm|g' \
+        -e 's|bazzite-suspend\.webm|defenestra-suspend.webm|g' \
+        -e 's|bazzite-oled\.webm|defenestra-oled.webm|g' \
+        -e 's|bazzite\.webm|defenestra.webm|g' \
+        {} +
 done
 
 for f in /usr/share/polkit-1/actions/org.defenestra.*.policy; do

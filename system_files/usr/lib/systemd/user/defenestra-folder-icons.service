@@ -2,6 +2,7 @@
 [Unit]
 Description=Set icons on known folders, watching for missing ones
 After=xdg-user-dirs.service
+ConditionEnvironment=XDG_SESSION_CLASS=user
 
 [Service]
 Type=oneshot
