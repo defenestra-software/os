@@ -8,7 +8,11 @@ dnf5 -y copr enable defenestra/defenestra
 dnf5 -y install --refresh defenestra-chassis nsncd \
     looking-glass-client \
     snapd \
-    defenestra-arsenal
+    defenestra-arsenal \
+    defenestra-speech \
+    defenestra-speech-voice-piper-kristin \
+    defenestra-speech-voice-piper-norman \
+    defenestra-speech-voice-kokoro
 dnf5 -y copr disable defenestra/defenestra
 
 install -Dm644 /ctx/system_files/etc/pki/rpm-gpg/RPM-GPG-KEY-defenestra \
