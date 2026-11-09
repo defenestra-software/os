@@ -259,8 +259,8 @@ install_ego_extension Move_Clock@rmy.pobox.com 36 \
     9c62ae35c027caa33dcfe33de66134236c6d739255150b0b563ff47a45879c7f
 install_ego_extension arcmenu@arcmenu.com 74 \
     ef414c90dcb5f2b0c6ccb5f8e59fd9963c584789d3d8d26740ddb731100c4b40
-install_ego_extension ding@rastersoft.com 103 \
-    bf02bd17299ddac759566ccf6ef2dabb881d7cda615ca1b04a048d753fd1328d
+install_ego_extension ding@rastersoft.com 105 \
+    84d9bf55afc5d050bd1eb10fa19019b23625e69b86c347d6ec3355e1708d4896
 install_ego_extension AlphabeticalAppGrid@stuarthayhurst 46 \
     e40a1620093da42729b3ed8602147b36d1da95341325b78561f6278bc1211701
 install_ego_extension tiling-assistant@leleat-on-github 56 \
