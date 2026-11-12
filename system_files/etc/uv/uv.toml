@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The protected python3 on PATH has no headers, so source builds using the uv
+# tool fail. uv's own Python version has headers, so have it use that version.
+# An explicit --python, or ~/.config/uv/uv.toml, can still overrides this.
+python-preference = "only-managed"
