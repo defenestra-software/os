@@ -46,16 +46,6 @@ rename_file /usr/lib/systemd/system/bazzite-flatpak-manager.service /usr/lib/sys
 rename_file /usr/lib/systemd/user/bazzite-dynamic-fixes.service /usr/lib/systemd/user/defenestra-dynamic-fixes.service
 rename_file /usr/lib/systemd/user/bazzite-user-setup.service /usr/lib/systemd/user/defenestra-user-setup.service
 
-# Patch system user services to not start as gdm or system users
-for unit in defenestra-dynamic-fixes defenestra-user-setup; do
-    f="/usr/lib/systemd/user/${unit}.service"
-    grep -qx 'WantedBy=default.target' "$f"
-    sed -i \
-        -e 's/^WantedBy=default\.target$/WantedBy=graphical-session-pre.target/' \
-        -e '/^\[Unit\]$/a ConditionEnvironment=XDG_SESSION_CLASS=user' \
-        "$f"
-done
-
 rename_file /usr/lib/systemd/system/bazzite-tdpfix.service /usr/lib/systemd/system/defenestra-tdpfix.service
 rename_file /usr/lib/systemd/system/bazzite-autologin.service /usr/lib/systemd/system/defenestra-autologin.service
 
