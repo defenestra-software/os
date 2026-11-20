@@ -9,6 +9,8 @@ dnf5 -y install --refresh defenestra-chassis nsncd \
     looking-glass-client \
     snapd \
     defenestra-arsenal \
+    defenestra-dictation \
+    defenestra-dictation-model-base \
     defenestra-speech \
     defenestra-speech-voice-piper-kristin \
     defenestra-speech-voice-piper-norman \
