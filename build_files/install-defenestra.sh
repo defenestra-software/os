@@ -251,8 +251,8 @@ install_ego_extension() {
 
 install_ego_extension tilingshell@ferrarodomenico.com 77 \
     17ab42f990d9b55f66009f50089ca172c62d206b03d0534ac5d9b63cf44e1cd1
-install_ego_extension gnome-mosaic@jardon.github.com 21 \
-    1999567581bd59cd28f4e5159f551cdbda0b3573e1991e23d423eb244ad5f6ad
+install_ego_extension gnome-mosaic@jardon.github.com 22 \
+    e7e0ef9ac43960919740dc59f376cd2fc0f50bd0f0644ed7ecde7e95c0fb8661
 install_ego_extension paperwm@paperwm.github.com 148 \
     2cef72ed7e31df4962584b52dabda9246c0ae81973b05f8d1202d9dbe9a3f794
 install_ego_extension space-bar@luchrioh 40 \
